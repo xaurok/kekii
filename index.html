@@ -2,6 +2,17 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>
+// Primera visita desde el navegador: mostrar la página de presentación
+(function(){ try{
+  var q=location.search, h=location.hash;
+  if(/[?&]app\b/.test(q)){ localStorage.setItem('tw_intro_done','1');
+    var nq=q.replace(/[?&]app(=[^&]*)?/,'').replace(/^&/,'?'); history.replaceState(null,'',location.pathname+nq+h); return; }
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if(standalone || q || /access_token|error=/.test(h) || localStorage.getItem('tw_intro_done') || localStorage.getItem('tw_token')) return;
+  location.replace('info.html');
+}catch(e){} })();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mojii</title>
 <link rel="manifest" href="manifest.json">
