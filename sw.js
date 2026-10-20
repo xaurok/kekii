@@ -1,6 +1,6 @@
 // Service worker mínimo para que la app se pueda instalar.
 // Guarda la página para que abra rápido; el stream y el chat siempre van por internet.
-const CACHE = 'mojii-v15';
+const CACHE = 'mojii-v16';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'manifest.json', 'icon-192.png', 'icon-512.png'])));
   self.skipWaiting();
