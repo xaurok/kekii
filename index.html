@@ -541,6 +541,7 @@ html,body,#home{overscroll-behavior-y:contain}
 // Se elige solo según el idioma del móvil la primera vez; luego se cambia en el menú de tu cuenta.
 const LANG = (()=>{ let v=null; try{ v=localStorage.getItem('tw_ui_lang'); }catch(e){} return v || ((navigator.language||'es').toLowerCase().startsWith('es') ? 'es' : 'en'); })();
 const LOC = LANG==='en' ? 'en-GB' : 'es-ES';
+const PRIVACY_URL = LANG==='en' ? 'privacy.html' : 'privacidad.html';
 document.documentElement.lang = LANG;
 const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
@@ -741,7 +742,7 @@ $('who').onclick = ()=>{
     const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
     const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
     const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent='No has iniciado sesión';
-    const p=document.createElement('p'); p.className='bio'; p.textContent='Inicia sesión con tu cuenta de Twitch para escribir en el chat, ver los canales que sigues, tus emotes, susurros y mucho más.';
+    const p=document.createElement('p'); p.className='bio'; p.textContent=T('Inicia sesión con tu cuenta de Twitch para escribir en el chat, ver los canales que sigues, tus emotes, susurros y mucho más.');
     const acts=document.createElement('div'); acts.className='acts'; acts.style.gridTemplateColumns='1fr';
     const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent='Iniciar sesión con Twitch'; b.onclick=goLogin;
     acts.appendChild(b); sh.append(h,p,acts);
@@ -876,7 +877,7 @@ function openPointsSheet(){
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
   const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
   const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent='Puntos de canal y Bits';
-  const p=document.createElement('p'); p.className='bio'; p.textContent='Twitch no deja ver tu saldo ni canjear desde otras apps. Ábrelo en Twitch para canjear recompensas de '+((chan.user&&chan.user.display_name)||channel)+' o hacer cheer con Bits; los cheers y canjes se verán aquí en el chat.';
+  const p=document.createElement('p'); p.className='bio'; p.textContent=T('Twitch no deja ver tu saldo ni canjear desde otras apps. Ábrelo en Twitch para canjear recompensas de '+((chan.user&&chan.user.display_name)||channel)+' o hacer cheer con Bits; los cheers y canjes se verán aquí en el chat.');
   sh.append(h,p);
   const tiers=document.createElement('div'); tiers.className='cheerTiers';
   [1,100,1000,5000,10000].forEach(a=>{ const ti=tierImage(a); if(!ti || !ti.url) return; const d=document.createElement('div'); d.style.color=ti.color; const i=document.createElement('img'); i.src=ti.url; i.alt=''; d.append(i, String(a)); tiers.appendChild(d); });
@@ -2439,7 +2440,7 @@ $('text').addEventListener('keydown', e=>{
 
 // ---------- Acerca de Mojii (aviso de app no oficial y privacidad) ----------
 function legalNote(){ const n=document.createElement('p'); n.className='legalNote';
-  n.innerHTML=T('Mojii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>'); return n; }
+  n.innerHTML=T('Mojii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>').replace('privacidad.html', PRIVACY_URL); return n; }
 function aboutButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent='Acerca de Mojii'; b.onclick=openAbout; return b; }
 function openAbout(){
   closeSheet();
@@ -2451,13 +2452,13 @@ function openAbout(){
   const sub=document.createElement('div'); sub.className='pd'; sub.textContent='Directos, chat y emotes';
   t.append(h,sub); head.append(ic,t); sh.appendChild(head);
   const p=document.createElement('p'); p.className='bio';
-  p.textContent='Mojii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc.';
+  p.textContent=T('Mojii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc.');
   sh.appendChild(p);
   const ul=document.createElement('ul'); ul.className='aboutList';
   ['No tiene servidores propios: tus datos se guardan solo en tu dispositivo.','Nunca ve tu contraseña: inicias sesión en la página oficial de Twitch.','Sin anuncios propios ni seguimiento.'].forEach(x=>{ const li=document.createElement('li'); li.textContent=x; ul.appendChild(li); });
   sh.appendChild(ul);
   const acts=document.createElement('div'); acts.className='acts';
-  const a=document.createElement('a'); a.href='privacidad.html'; a.target='_blank'; a.rel='noopener'; a.textContent='Política de privacidad';
+  const a=document.createElement('a'); a.href=PRIVACY_URL; a.target='_blank'; a.rel='noopener'; a.textContent='Política de privacidad';
   const c=document.createElement('button'); c.type='button'; c.textContent='Cerrar'; c.onclick=closeSheet;
   acts.append(a,c); sh.appendChild(acts);
 }
