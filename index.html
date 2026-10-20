@@ -459,13 +459,6 @@ html,body,#home{overscroll-behavior-y:contain}
 #tabInk{position:absolute;bottom:-1px;height:3px;background:var(--fg);border-radius:2px;pointer-events:none;opacity:0}
 .homeInner .tabs.dragging .tab{border-bottom-color:transparent}
 .homeInner .tabs.dragging #tabInk{opacity:1}
-/* ---------- Deslizar el directo hacia abajo para volver al inicio ---------- */
-#pullStrip{display:none}
-body.watching:not(.mini) #pullStrip{display:flex;position:absolute;left:0;right:0;top:0;height:34px;z-index:4;justify-content:center;align-items:flex-start;padding-top:6px;touch-action:none}
-#pullStrip span{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.55);box-shadow:0 0 4px rgba(0,0,0,.6)}
-body.peekHome #home{display:block;position:fixed;inset:0;z-index:0;padding-top:env(safe-area-inset-top,0px)}
-body.peekHome main{position:relative;z-index:2;background:var(--bg);border-radius:14px;overflow:hidden;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
-main.snap{transition:transform .22s ease-out}
 </style>
 </head>
 <body>
@@ -497,7 +490,7 @@ main.snap{transition:transform .22s ease-out}
   </div>
 </section>
 <main>
-  <div id="playerWrap"><div id="playerSlot"></div><div id="pullStrip" aria-hidden="true"><span></span></div>
+  <div id="playerWrap"><div id="playerSlot"></div>
     <div id="miniBar"><span id="miniName"></span><button id="miniClose" type="button" aria-label="Cerrar directo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <button id="chatToggle" type="button" aria-label="Mostrar chat"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10h.01M12 10h.01M15 10h.01" stroke-linecap="round" stroke-width="2.6"/></svg>Chat</button></div>
   <div id="chatCol">
@@ -1951,31 +1944,7 @@ function swipeHome(dir){
     }
   });
 })();
-// Deslizar el directo hacia abajo (desde la barrita de arriba del vídeo o la barra del canal) para volver al inicio
-(()=>{
-  const m=document.querySelector('main'); let y0=null, x0=0, dy=0, t0=0, active=false;
-  const start=e=>{ if(!document.body.classList.contains('watching') || document.body.classList.contains('mini') || e.touches.length!==1) return;
-    if(e.target.closest('button') && !e.target.closest('#pullStrip')) { if(e.currentTarget.id!=='statusBar') return; }
-    y0=e.touches[0].clientY; x0=e.touches[0].clientX; dy=0; t0=Date.now(); active=false; };
-  const move=e=>{
-    if(y0===null) return; const my=e.touches[0].clientY-y0, mx=e.touches[0].clientX-x0;
-    if(!active){ if(my<10 || Math.abs(mx)>my){ if(my<-6 || Math.abs(mx)>14) y0=null; return; } active=true; m.classList.remove('snap'); document.body.classList.add('peekHome'); if(!$('grid').childElementCount) loadHome(); }
-    dy=Math.max(0,my); m.style.transform='translateY('+dy+'px) scale('+(1-Math.min(dy/innerHeight,1)*0.08)+')';
-    if(e.cancelable) e.preventDefault();
-  };
-  const end=()=>{
-    if(y0===null) return; y0=null; if(!active) return; active=false;
-    const fast=dy>40 && dy/(Date.now()-t0)>0.5;
-    m.classList.add('snap');
-    if(dy>innerHeight*0.22 || fast){
-      m.style.transform='translateY('+innerHeight+'px) scale(.9)';
-      setTimeout(()=>{ m.classList.remove('snap'); m.style.transform=''; document.body.classList.remove('peekHome'); showHome(true); }, 220);
-    } else {
-      m.style.transform=''; setTimeout(()=>{ m.classList.remove('snap'); document.body.classList.remove('peekHome'); }, 230);
-    }
-  };
-  [$('pullStrip'), $('statusBar')].forEach(el=>{ el.addEventListener('touchstart', start, {passive:true}); el.addEventListener('touchmove', move, {passive:false}); el.addEventListener('touchend', end); el.addEventListener('touchcancel', end); });
-})();
+
 function swipeEm(dir){
   if($('emSearch').value) return;
   const tabs=[...$('emTabs').querySelectorAll('.emTab')]; const i=tabs.findIndex(t=>t.getAttribute('aria-selected')==='true')+(dir<0?1:-1);
