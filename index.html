@@ -446,6 +446,11 @@ html,body,#home{overscroll-behavior-y:contain}
 .legalNote a{color:var(--muted)}
 .aboutList{margin:12px 0 0;padding-left:18px;font-size:14px;color:var(--fg)}
 .aboutList li{margin:4px 0}
+
+/* ---------- Selector de idioma ---------- */
+.langRow{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.langLab{font-size:13px;color:var(--muted);margin-right:4px}
+.langChip{padding:6px 14px}
 </style>
 </head>
 <body>
@@ -532,6 +537,159 @@ html,body,#home{overscroll-behavior-y:contain}
 <div id="sheetBg" hidden></div>
 <div id="sheet" hidden role="dialog" aria-label="Usuario"></div>
 <script>
+// ---------- Idioma de la app (español / inglés) ----------
+// Se elige solo según el idioma del móvil la primera vez; luego se cambia en el menú de tu cuenta.
+const LANG = (()=>{ let v=null; try{ v=localStorage.getItem('tw_ui_lang'); }catch(e){} return v || ((navigator.language||'es').toLowerCase().startsWith('es') ? 'es' : 'en'); })();
+const LOC = LANG==='en' ? 'en-GB' : 'es-ES';
+document.documentElement.lang = LANG;
+const EN = {
+ 'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
+ 'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
+ 'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
+ 'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
+ 'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
+ 'Ir al directo':'Go live','Ir al momento actual del directo':'Jump to the live moment','Saltando al directo…':'Jumping to live…',
+ 'Mostrar u ocultar título y etiquetas':'Show or hide title and tags','Perfil del canal':'Channel profile','Ver perfil del canal':'View channel profile','Buscar canal ':'Search channel',
+ 'Toca ▶ en el reproductor para empezar el directo.':'Tap ▶ on the player to start the stream.','El chat ha sido borrado por un moderador':'Chat was cleared by a moderator',
+ 'Este canal no tiene emotes de 7TV':"This channel has no 7TV emotes",'No se pudieron cargar los emotes de 7TV':"Couldn't load 7TV emotes",
+ 'Mensajes anteriores · ahora en directo ↓':'Earlier messages · live now ↓','Mensaje destacado con puntos de canal':'Highlighted with channel points',
+ 'Canjeó una recompensa del canal':'Redeemed a channel reward','Nueva suscripción':'New subscription','Resuscripción':'Resubscription','Suscripción regalada':'Gifted subscription',
+ 'Regalo de suscripciones':'Gifted subscriptions','Raid':'Raid','Anuncio':'Announcement','Suscripción':'Subscription',
+ 'Responder':'Reply','Mencionar':'Mention','Copiar mensaje':'Copy message','Ver su canal':'Go to their channel','Ver perfil':'View profile','Enviar susurro':'Send whisper',
+ '🎁 Regalar suscripción':'🎁 Gift a sub','Mensaje copiado':'Message copied','No se pudo copiar':"Couldn't copy",'Enlace copiado':'Link copied','Enlace del clip copiado':'Clip link copied',
+ 'Nombre copiado: elige "Regalar a alguien" y pégalo':'Name copied: choose "Gift to someone" and paste it',
+ 'Mensajes en este chat':'Messages in this chat','No hay mensajes suyos desde que entraste.':'No messages from them since you joined.','Ver historial completo':'See full history',
+ 'Cargar mes anterior':'Load previous month','No hay más historial.':'No more history.','No se pudo cargar el historial ahora mismo.':"Couldn't load the history right now.",
+ 'Este canal no tiene historial público guardado, así que solo se ven los mensajes desde que entraste.':"This channel has no public log, so you only see messages since you joined.",
+ 'Cargando…':'Loading…','Cargando clips…':'Loading clips…','Compartir':'Share','Compartir clip':'Share clip','Canal':'Channel','Twitch':'Twitch','Cerrar':'Close','Cerrar clips':'Close clips',
+ 'Abrir en Twitch para dar me gusta o comentar':'Open in Twitch to like or comment','Cerrar directo':'Close stream','Volver':'Back','Volver a categorías':'Back to categories','Cerrar vídeo':'Close video','Vídeo':'Video',
+ 'Inicia sesión para ver quién está en directo y los canales que sigues.':'Log in to see who is live and the channels you follow.',
+ 'Iniciar sesión con Twitch':'Log in with Twitch','No se pudo cargar tu cuenta.':"Couldn't load your account.",
+ 'Vuelve a iniciar sesión para ver los canales que sigues.':'Log in again to see the channels you follow.',
+ 'Ninguno de los canales que sigues está en directo ahora mismo.':'None of the channels you follow are live right now.',
+ 'No hay directos en esta categoría.':'No live streams in this category.','No se pudieron cargar los directos. Prueba de nuevo en un momento.':"Couldn't load streams. Try again in a moment.",
+ 'No hay directos en español en esta categoría ahora mismo.':'No Spanish streams in this category right now.','Ver todos los idiomas':'See all languages',
+ 'Directos en esta categoría':'Live streams in this category','Vuelve a iniciar sesión para ver los clips de los canales que sigues.':'Log in again to see clips from the channels you follow.',
+ 'No se pudieron cargar los clips ahora mismo.':"Couldn't load clips right now.",'No se pudieron cargar los clips':"Couldn't load clips",'Este canal no tiene clips':'This channel has no clips','Este canal no tiene clips.':'This channel has no clips.',
+ 'Clips del canal':'Channel clips','Perfil completo':'Full profile','Perfil en Twitch':'Profile on Twitch','Ver directo':'Watch stream','Ir al canal y su chat':'Go to channel and chat',
+ 'Vídeos':'Videos','Calendario':'Schedule','Este canal no tiene vídeos guardados.':'This channel has no saved videos.','Este canal no tiene calendario publicado.':"This channel hasn't published a schedule.",
+ 'No se pudo cargar esta sección.':"Couldn't load this section.",'Directo':'Stream','Sin título':'Untitled','Socio de Twitch':'Twitch Partner','Desconectado · último directo':'Offline · last stream',
+ 'Inicia sesión para ver perfiles de canales.':'Log in to see channel profiles.','No se pudo cargar el perfil.':"Couldn't load the profile.",
+ 'Seguir':'Follow','Suscribirse':'Subscribe','Suscrito':'Subscribed','Se abre en Twitch para seguir o suscribirte.':'Opens Twitch to follow or subscribe.',
+ 'Ya sigues a este canal y estás suscrito.':'You follow this channel and are subscribed.',
+ 'Vuelve a iniciar sesión para ver si estás suscrito. Las acciones se abren en Twitch.':'Log in again to see if you are subscribed. Actions open in Twitch.',
+ 'Canjear puntos en Twitch':'Redeem points on Twitch','Hacer cheer en Twitch':'Cheer on Twitch',
+ 'Susurros':'Whispers','Menciones':'Mentions','Marcar todo como leído':'Mark all as read','Nuevo susurro: nombre de usuario':'New whisper: username','Escribir':'Write',
+ 'Aún no hay susurros. Los que recibas con Mojii abierta aparecerán aquí.':"No whispers yet. The ones you get while Mojii is open will show up here.",
+ 'Solo se reciben los susurros que llegan mientras Mojii está abierta. Se guardan en este móvil.':'Only whispers received while Mojii is open arrive here. They are saved on this device.',
+ 'Aquí aparecerán los mensajes que te mencionen o te respondan en los chats que tengas abiertos.':'Messages that mention or reply to you in the chats you have open will show up here.',
+ 'Inicia sesión para usar los susurros.':'Log in to use whispers.','Vuelve a iniciar sesión una vez para activar los susurros.':'Log in again once to enable whispers.',
+ 'Twitch pide tener el teléfono verificado en tu cuenta para enviar susurros.':'Twitch requires a verified phone number on your account to send whispers.',
+ 'Has enviado demasiados susurros. Espera un poco.':"You've sent too many whispers. Wait a bit.",'Este usuario no acepta tus susurros.':"This user doesn't accept your whispers.",
+ 'Vuelve a iniciar sesión para poder enviar susurros.':'Log in again to send whispers.','No se pudo enviar el susurro.':"Couldn't send the whisper.",'Enviar susurro ':'Send whisper',
+ 'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
+ 'Entra en un canal para cargar sus emotes':'Join a channel to load its emotes','Los emotes que uses aparecerán aquí.':'Emotes you use will show up here.',
+ 'Inicia sesión para ver tus emotes de Twitch.':'Log in to see your Twitch emotes.','Vuelve a iniciar sesión para ver también tus emotes de suscripción de Twitch.':'Log in again to also see your Twitch subscription emotes.',
+ 'Ver mi perfil':'View my profile','Cerrar sesión':'Log out','No has iniciado sesión':"You're not logged in",
+ 'Inicia sesión con tu cuenta de Twitch para escribir en el chat, ver los canales que sigues, tus emotes, susurros y mucho más.':'Log in with your Twitch account to chat, see the channels you follow, your emotes, whispers and much more.',
+ 'Instalar Mojii como app':'Install Mojii as an app','Instala Mojii en tu móvil':'Install Mojii on your phone','Se abre como una app, a pantalla completa y con su propio icono.':'It opens like an app, full screen and with its own icon.',
+ 'Instalar ahora':'Install now','Ahora no':'Not now','También puedes seguir usándola desde el navegador sin instalar nada.':'You can also keep using it in the browser without installing anything.','Mojii instalada':'Mojii installed',
+ 'Acerca de Mojii':'About Mojii','Directos, chat y emotes':'Streams, chat and emotes','Política de privacidad':'Privacy policy',
+ 'Mojii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc.':'Mojii is an unofficial app. It is not affiliated with, sponsored or endorsed by Twitch Interactive, Inc. or 7TV. Twitch is a trademark of Twitch Interactive, Inc.',
+ 'No tiene servidores propios: tus datos se guardan solo en tu dispositivo.':'It has no servers of its own: your data stays on your device.',
+ 'Nunca ve tu contraseña: inicias sesión en la página oficial de Twitch.':'It never sees your password: you log in on the official Twitch page.',
+ 'Sin anuncios propios ni seguimiento.':'No ads of its own and no tracking.','Idioma':'Language',
+ 'Mojii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>':'Mojii is an unofficial app, not related to Twitch or 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacy</a>',
+ 'Ábrela en <b>Safari</b> (en otros navegadores de iPhone no se puede instalar).':'Open it in <b>Safari</b> (other iPhone browsers can\'t install it).',
+ 'Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> de la barra de abajo.':'Tap the <b>Share</b> <span class="kbd">⬆︎</span> button in the bottom bar.',
+ 'Baja y elige <b>Añadir a pantalla de inicio</b>, y luego <b>Añadir</b>.':'Scroll down, choose <b>Add to Home Screen</b>, then <b>Add</b>.',
+ 'Toca el menú <span class="kbd">⋮</span> arriba a la derecha de Chrome.':'Tap the <span class="kbd">⋮</span> menu at the top right of Chrome.',
+ 'Elige <b>Instalar app</b> (o <b>Añadir a pantalla de inicio</b>).':'Choose <b>Install app</b> (or <b>Add to Home screen</b>).',
+ 'Confirma con <b>Instalar</b>. Aparecerá el icono de Mojii en tu pantalla de inicio.':'Confirm with <b>Install</b>. The Mojii icon will appear on your home screen.',
+ 'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
+ 'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Mojii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Mojii</b>.',
+ 'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.','ahora':'now','EN DIRECTO':'LIVE','seguidores':'followers','seguidores ·':'followers ·','En Twitch':'On Twitch',
+ 'Tu navegador no permite pantalla completa aquí':"Your browser doesn't allow full screen here",'Salir':'Log out','Copia el enlace:':'Copy the link:',
+};
+const EN_PATTERNS = [
+ [/^Entrando en #(.+)…$/, 'Joining #$1…'],
+ [/^7TV: (\d+) emotes del canal cargados$/, '7TV: $1 channel emotes loaded'],
+ [/^Respondiendo a @([^:]+): ([\s\S]*)$/, 'Replying to @$1: $2'],
+ [/^Cheer de (\d+) Bits$/, 'Cheer of $1 Bits'],
+ [/^Escribe tu primer susurro a (.+)\.$/, 'Write your first whisper to $1.'],
+ [/^Historial de @(\S+) en (\S+)$/, "@$1's history in $2"],
+ [/^Ningún emote coincide con "(.*)"$/, 'No emotes match "$1"'],
+ [/^en el chat de (.+)$/, "in $1's chat"],
+ [/^(.+) · (\d+) mensajes$/, '$1 · $2 messages'],
+ [/^Busca a (.+) en "Regalar a alguien"$/, 'Look for $1 under "Gift to someone"'],
+ [/^Susurro de ([^:]+): ([\s\S]*)$/, 'Whisper from $1: $2'],
+ [/^No existe ningún usuario llamado (.+)$/, 'There is no user called $1'],
+ [/^No existe ningún canal llamado (.+)\.$/, 'There is no channel called $1.'],
+ [/^Ir a (\S+)$/, 'Go to $1'],
+ [/^Último: (.+)$/, 'Last: $1'],
+ [/^Desde el (.+)$/, 'Since $1'],
+ [/^desde (\d{4})$/, 'since $1'],
+ [/^@(\S+) · cuenta creada el (.+)$/, '@$1 · account created on $2'],
+ [/^@(\S+) · inicia sesión para ver más$/, '@$1 · log in to see more'],
+ [/^Twitch no deja ver tu saldo ni canjear desde otras apps\. Ábrelo en Twitch para canjear recompensas de (.+) o hacer cheer con Bits; los cheers y canjes se verán aquí en el chat\.$/,
+   "Twitch doesn't let other apps see your balance or redeem. Open Twitch to redeem $1's rewards or cheer with Bits; cheers and redemptions will show up here in chat."],
+ [/^Suscrito · nivel (\d)$/, 'Subscribed · tier $1'],
+ [/^Tú: ([\s\S]*)$/, 'You: $1'],
+ [/^(.+) · (\d+)$/, (m,a,b)=>tr(a)+' · '+b],
+];
+const EN_FRAGMENTS = [
+ [/hace (\d+) min\b/g, '$1 min ago'], [/hace (\d+) h\b/g, '$1 h ago'], [/hace 1 día\b/g, '1 day ago'], [/hace (\d+) días\b/g, '$1 days ago'],
+ [/ago por /g, 'ago by '], [/\bespectadores\b/g, 'viewers'], [/\bvisualizaciones\b/g, 'views'], [/\bseguidores\b/g, 'followers'],
+ [/● En directo/g, '● LIVE'], [/En Twitch desde (\d{4})/g, 'On Twitch since $1'], [/Jugando a /g, 'Playing '], [/Última categoría: /g, 'Last category: '],
+ [/ · Destacado\b/g, ' · Highlight'], [/ · Subido\b/g, ' · Upload'], [/ · Cancelado\b/g, ' · Cancelled'], [/(\d+) meses\b/g, '$1 months'], [/(\d+) mes\b/g, '$1 month'],
+ [/\bAnuncio\b/g, 'Ad'],
+];
+function tr(str){
+  if(LANG!=='en' || !str) return str;
+  const lead=str.match(/^\s*/)[0], trail=str.match(/\s*$/)[0], core=str.trim();
+  if(!core) return str;
+  if(EN[core]!==undefined) return lead+EN[core]+trail;
+  for(const [re,rep] of EN_PATTERNS){ if(re.test(core)) return lead+core.replace(re,rep)+trail; }
+  let out=core; for(const [re,rep] of EN_FRAGMENTS) out=out.replace(re,rep);
+  return lead+out+trail;
+}
+const T = tr;
+// Partes con contenido de otros (mensajes, títulos, biografías, nombres) que nunca se traducen
+const NO_TR = '.langChip,.bio,.cTitle,.clipTitle,.ct,#chanTitle,.tagChip,.hx,.bub,.quote,.emCell,.mSug,.cName,.catName,.pn,.sn,#miniName,#chanName,.name,.badges,input,textarea,.cg,.cGame';
+function shouldTranslate(node){
+  const el = node.nodeType===1 ? node : node.parentElement; if(!el) return false;
+  if(el.closest(NO_TR)) return false;
+  const msg = el.closest('#chat .msg, .hist .msg'); if(msg && !el.closest('.sys,.replyTo,.cheerTag,.hlTag')) return false;
+  const am = el.closest('.actMsg'); if(am) return node.nodeType===3 && /^Tú: /.test(node.data);
+  return true;
+}
+function trNode(root){
+  if(LANG!=='en') return;
+  if(root.nodeType===3){ if(shouldTranslate(root)){ const t=tr(root.data); if(t!==root.data) root.data=t; } return; }
+  if(root.nodeType!==1) return;
+  const walk=document.createTreeWalker(root, NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);
+  let n=root;
+  do{
+    if(n.nodeType===3){ if(shouldTranslate(n)){ const t=tr(n.data); if(t!==n.data) n.data=t; } }
+    else for(const a of ['placeholder','aria-label','title']){ const v=n.getAttribute && n.getAttribute(a); if(v){ const t=tr(v); if(t!==v) n.setAttribute(a,t); } }
+  } while((n=walk.nextNode()));
+}
+if(LANG==='en'){
+  const go=()=>{ trNode(document.body); new MutationObserver(ms=>ms.forEach(m=>{ m.addedNodes.forEach(trNode); if(m.type==='attributes') trNode(m.target); }))
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['placeholder','aria-label','title']}); };
+  if(document.body) go(); else addEventListener('DOMContentLoaded', go);
+}
+function setUiLang(l){ try{ localStorage.setItem('tw_ui_lang', l); }catch(e){} location.reload(); }
+function langPicker(){
+  const row=document.createElement('div'); row.className='langRow';
+  const lab=document.createElement('span'); lab.textContent=LANG==='en'?'Language':'Idioma'; lab.className='langLab'; row.appendChild(lab);
+  [['es','Español'],['en','English']].forEach(([k,label])=>{ const b=document.createElement('button'); b.type='button'; b.className='chip langChip'; b.setAttribute('aria-pressed',String(LANG===k));
+    b.textContent=label; b.onclick=()=>{ if(LANG!==k) setUiLang(k); }; row.appendChild(b); });
+  return row;
+}
+
 const $ = id => document.getElementById(id);
 const store = {
   get(k){try{return localStorage.getItem(k)}catch(e){return null}},
@@ -588,7 +746,7 @@ $('who').onclick = ()=>{
     const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent='Iniciar sesión con Twitch'; b.onclick=goLogin;
     acts.appendChild(b); sh.append(h,p,acts);
     if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Mojii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
-    sh.appendChild(aboutButton()); sh.appendChild(legalNote());
+    sh.appendChild(langPicker()); sh.appendChild(aboutButton()); sh.appendChild(legalNote());
     return;
   }
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -602,6 +760,7 @@ $('who').onclick = ()=>{
   const b2=document.createElement('button'); b2.type='button'; b2.textContent='Cerrar sesión'; b2.style.color='#ff6b6b';
   b2.onclick=()=>{ store.set('tw_token',null); store.set('tw_login',null); location.reload(); };
   acts.append(b1,b2); sh.appendChild(acts);
+  sh.appendChild(langPicker());
   sh.appendChild(aboutButton());
   if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Mojii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
   sh.appendChild(legalNote());
@@ -1019,7 +1178,7 @@ async function helix(path){
   const r = await fetch('https://api.twitch.tv/helix/'+path,{headers:{'Client-Id':CLIENT_ID, Authorization:'Bearer '+token}});
   if(!r.ok) throw new Error(r.status); return (await r.json()).data || [];
 }
-function fmtViewers(n){ return n>=1000 ? (n/1000).toFixed(n<10000?1:0).replace('.0','').replace('.',',')+' mil' : String(n); }
+function fmtViewers(n){ if(LANG==='en') return fmtK(n); return n>=1000 ? (n/1000).toFixed(n<10000?1:0).replace('.0','').replace('.',',')+' mil' : String(n); }
 function score(c,q){
   const l=c.login.toLowerCase(), d=c.name.toLowerCase(); let s=0;
   if(l===q||d===q) s+=1000;
@@ -1129,7 +1288,7 @@ function streamCard(st){
   const im=document.createElement('img'); im.loading='lazy'; im.alt='';
   im.src=st.thumbnail_url.replace('{width}','640').replace('{height}','360')+'?t='+Math.floor(Date.now()/60000);
   const lv=document.createElement('span'); lv.className='badgeLive'; lv.textContent='En directo';
-  const vw=document.createElement('span'); vw.className='viewers'; vw.textContent=st.viewer_count.toLocaleString('es-ES')+' espectadores';
+  const vw=document.createElement('span'); vw.className='viewers'; vw.textContent=st.viewer_count.toLocaleString(LOC)+' espectadores';
   th.append(im,lv,vw);
   const meta=document.createElement('div'); meta.className='meta';
   const av=document.createElement('img'); av.alt=''; if(avatarCache.has(st.user_id)) av.src=avatarCache.get(st.user_id);
@@ -1309,7 +1468,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('clipViewer'
 // ---------- Explorar: categorías ----------
 const catViewers = new Map(); // id -> {n, more, t}
 function boxArt(url,w,h){ return (url||'').replace('{width}',w).replace('{height}',h); }
-function fmtK(n){ if(n>=1e6) return (n/1e6).toFixed(1).replace('.0','').replace('.',',')+' M'; return n>=1000 ? (n/1000).toFixed(n<100000?1:0).replace('.0','').replace('.',',')+' mil' : String(n); }
+function fmtK(n){ if(LANG==='en'){ if(n>=1e6) return (n/1e6).toFixed(1).replace('.0','')+'M'; return n>=1000 ? (n/1000).toFixed(n<100000?1:0).replace('.0','')+'K' : String(n); } if(n>=1e6) return (n/1e6).toFixed(1).replace('.0','').replace('.',',')+' M'; return n>=1000 ? (n/1000).toFixed(n<100000?1:0).replace('.0','').replace('.',',')+' mil' : String(n); }
 function setViews(v,t){ v.textContent=''; const sp=document.createElement('span'); sp.textContent=t; v.appendChild(sp); }
 function catCard(g){
   const b=document.createElement('button'); b.type='button'; b.className='catCard';
@@ -1404,8 +1563,8 @@ async function loadRecentMessages(ch){
 function fmtStamp(t){
   if(!t) return '';
   const d=new Date(t), today=new Date();
-  const hm=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-  return d.toDateString()===today.toDateString() ? hm : d.toLocaleDateString('es-ES',{day:'numeric',month:'short'})+' '+hm;
+  const hm=d.toLocaleTimeString(LOC,{hour:'2-digit',minute:'2-digit'});
+  return d.toDateString()===today.toDateString() ? hm : d.toLocaleDateString(LOC,{day:'numeric',month:'short'})+' '+hm;
 }
 function histRow(m){
   const r=document.createElement('div'); r.className='hm';
@@ -1443,7 +1602,7 @@ function buildUserHistory(userLogin){
       if(!r.ok) throw new Error('err');
       const msgs=((await r.json()).messages||[]).filter(m=>m.type===1 || m.type===undefined);
       const label=document.createElement('div'); label.className='histSep';
-      label.textContent=new Date(+mo.year, +mo.month-1, 1).toLocaleDateString('es-ES',{month:'long',year:'numeric'})+' · '+msgs.length+' mensajes';
+      label.textContent=new Date(+mo.year, +mo.month-1, 1).toLocaleDateString(LOC,{month:'long',year:'numeric'})+' · '+msgs.length+' mensajes';
       listEl.appendChild(label);
       msgs.forEach(m=>{
         const t=Date.parse(m.timestamp)||0;
@@ -1480,7 +1639,7 @@ $('replyCancel').onclick = ()=>setReply(null);
 function closeSheet(){ $('sheet').classList.remove('chanProf'); $('sheet').hidden=true; $('sheetBg').hidden=true; document.querySelectorAll('.msg.sel').forEach(e=>e.classList.remove('sel')); }
 $('sheetBg').onclick = closeSheet;
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('sheet').hidden) closeSheet(); });
-function fmtDate(iso){ try{ return new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } }
+function fmtDate(iso){ try{ return new Date(iso).toLocaleDateString(LOC,{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } }
 async function openSheet(info, el){
   closeSheet(); if(el) el.classList.add('sel');
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -1543,7 +1702,7 @@ function updateBadge(){
 function relTime(t){
   const d=(Date.now()-t)/1000;
   if(d<60) return 'ahora'; if(d<3600) return 'hace '+Math.floor(d/60)+' min'; if(d<86400) return 'hace '+Math.floor(d/3600)+' h';
-  return new Date(t).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  return new Date(t).toLocaleDateString(LOC,{day:'numeric',month:'short'});
 }
 function addWhisper(login,name,id,msg){
   const c = whispers[login] || (whispers[login]={login,name:name||login,id,msgs:[],unread:0});
@@ -1621,7 +1780,7 @@ function renderAct(){
     const wrap=document.createElement('div'); wrap.className='bubbles';
     let lastT=0;
     c.msgs.forEach(m=>{
-      if(m.t-lastT>15*60*1000){ const t=document.createElement('div'); t.className='bubTime'; t.textContent=new Date(m.t).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); wrap.appendChild(t); }
+      if(m.t-lastT>15*60*1000){ const t=document.createElement('div'); t.className='bubTime'; t.textContent=new Date(m.t).toLocaleString(LOC,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); wrap.appendChild(t); }
       lastT=m.t; const b=document.createElement('div'); b.className='bub '+m.from; renderText(b, m.text, []); wrap.appendChild(b);
     });
     if(!c.msgs.length){ const n=document.createElement('div'); n.className='actNote'; n.textContent='Escribe tu primer susurro a '+c.name+'.'; wrap.appendChild(n); }
@@ -1963,7 +2122,7 @@ function relationRow(u){
   if(u.login===login){ row.remove(); return document.createDocumentFragment(); }
   relationStatus(u).then(r=>{
     if(r.follow){ fol.className='relBtn on'; fol.innerHTML=HEART; fol.append(' Siguiendo');
-      if(r.followedAt) fol.title='Desde el '+new Date(r.followedAt).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}); }
+      if(r.followedAt) fol.title='Desde el '+new Date(r.followedAt).toLocaleDateString(LOC,{day:'numeric',month:'long',year:'numeric'}); }
     if(r.tier){ sub.className='relBtn on'; sub.innerHTML=STAR; sub.append(' Suscrito'+({'1000':'',  '2000':' · nivel 2','3000':' · nivel 3'}[r.tier]||'')); }
     if(r.follow && r.tier) note.textContent='Ya sigues a este canal y estás suscrito.';
     else if(!(me.scopes||[]).includes('user:read:subscriptions') && token) note.textContent='Vuelve a iniciar sesión para ver si estás suscrito. Las acciones se abren en Twitch.';
@@ -2071,12 +2230,12 @@ async function loadProfileTab(content){
       segs.forEach(sg=>{
         const d=new Date(sg.start_time), e=sg.end_time?new Date(sg.end_time):null;
         const it=document.createElement('div'); it.className='schedItem';
-        const dd=document.createElement('div'); dd.className='schedDate'; const b=document.createElement('b'); b.textContent=d.getDate(); const sp=document.createElement('span'); sp.textContent=d.toLocaleDateString('es-ES',{weekday:'short'});
+        const dd=document.createElement('div'); dd.className='schedDate'; const b=document.createElement('b'); b.textContent=d.getDate(); const sp=document.createElement('span'); sp.textContent=d.toLocaleDateString(LOC,{weekday:'short'});
         dd.append(sp,b);
         const tx=document.createElement('div'); tx.className='schedTxt';
         const st=document.createElement('span'); st.className='st'; st.textContent=sg.title||'Directo';
-        const hm=o=>o.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-        const sm=document.createElement('span'); sm.className='sm'; sm.textContent=d.toLocaleDateString('es-ES',{day:'numeric',month:'long'})+' · '+hm(d)+(e?' – '+hm(e):'')+(sg.category?' · '+sg.category.name:'')+(sg.canceled_until?' · Cancelado':'');
+        const hm=o=>o.toLocaleTimeString(LOC,{hour:'2-digit',minute:'2-digit'});
+        const sm=document.createElement('span'); sm.className='sm'; sm.textContent=d.toLocaleDateString(LOC,{day:'numeric',month:'long'})+' · '+hm(d)+(e?' – '+hm(e):'')+(sg.category?' · '+sg.category.name:'')+(sg.canceled_until?' · Cancelado':'');
         tx.append(st,sm); it.append(dd,tx); content.appendChild(it);
       });
     }
@@ -2176,7 +2335,7 @@ function openInstallGuide(){
   t.append(h,sub); head.append(ic,t); sh.appendChild(head);
   const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/i.test(ua), android=/Android/i.test(ua);
   const ol=document.createElement('ol'); ol.className='instSteps';
-  const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=html; li.appendChild(sp); ol.appendChild(li); };
+  const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=T(html); li.appendChild(sp); ol.appendChild(li); };
   if(ios){
     step('Ábrela en <b>Safari</b> (en otros navegadores de iPhone no se puede instalar).');
     step('Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> de la barra de abajo.');
@@ -2280,7 +2439,7 @@ $('text').addEventListener('keydown', e=>{
 
 // ---------- Acerca de Mojii (aviso de app no oficial y privacidad) ----------
 function legalNote(){ const n=document.createElement('p'); n.className='legalNote';
-  n.innerHTML='Mojii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>'; return n; }
+  n.innerHTML=T('Mojii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>'); return n; }
 function aboutButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent='Acerca de Mojii'; b.onclick=openAbout; return b; }
 function openAbout(){
   closeSheet();
