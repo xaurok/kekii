@@ -2558,6 +2558,27 @@ function openAbout(){
   [$('pullStrip'), $('statusBar')].forEach(el=>{ el.addEventListener('touchstart', start, {passive:true}); el.addEventListener('touchmove', move, {passive:false}); el.addEventListener('touchend', end); el.addEventListener('touchcancel', end); });
 })();
 
+
+// ---------- Seguir sonando al salir de la app ----------
+// Al pasar a segundo plano, el reproductor de Twitch puede pausarse solo. Si estaba sonando, lo reanudamos.
+(()=>{
+  let bgWasPlaying=false, bgTimer=null;
+  const isPaused=()=>{ try{ return tPlayer ? tPlayer.isPaused() : null; }catch(e){ return null; } };
+  const resume=()=>{ try{ if(tPlayer && channel && tPlayer.isPaused()) tPlayer.play(); }catch(e){} };
+  document.addEventListener('visibilitychange', ()=>{
+    clearInterval(bgTimer);
+    if(document.hidden){
+      const p=isPaused(); bgWasPlaying = p===false;
+      if(!bgWasPlaying) return;
+      let n=0; bgTimer=setInterval(()=>{ resume(); if(++n>=20) clearInterval(bgTimer); }, 1000);
+    } else if(bgWasPlaying){
+      resume(); setTimeout(resume, 600); bgWasPlaying=false;
+    }
+  });
+  // También cuando el sistema congela la página un instante (cambio de app, bloqueo de pantalla)
+  window.addEventListener('pagehide', ()=>{ if(isPaused()===false) bgWasPlaying=true; });
+})();
+
 if('serviceWorker' in navigator){ navigator.serviceWorker.register(BASE+'sw.js',{scope:BASE}).catch(()=>{}); }
 (async()=>{
   await validate();
