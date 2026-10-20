@@ -627,6 +627,7 @@ const EN = {
  'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
  'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Mojii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Mojii</b>.',
  'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.',
+ 'Página de Mojii':'Mojii website',
  'No hay clips de esta semana de los canales que sigues.':'No clips this week from the channels you follow.',
  'No hay clips de esta semana de los canales que sigues en español.':'No Spanish clips this week from the channels you follow.',
  'No hay clips populares esta semana.':'No popular clips this week.','No hay clips populares en español esta semana.':'No popular Spanish clips this week.','ahora':'now','EN DIRECTO':'LIVE','seguidores':'followers','seguidores ·':'followers ·','En Twitch':'On Twitch',
@@ -2526,8 +2527,9 @@ function openAbout(){
   sh.appendChild(ul);
   const acts=document.createElement('div'); acts.className='acts';
   const a=document.createElement('a'); a.href=PRIVACY_URL; a.target='_blank'; a.rel='noopener'; a.textContent='Política de privacidad';
+  const w=document.createElement('a'); w.href='info.html'; w.target='_blank'; w.rel='noopener'; w.textContent='Página de Mojii';
   const c=document.createElement('button'); c.type='button'; c.textContent='Cerrar'; c.onclick=closeSheet;
-  acts.append(a,c); sh.appendChild(acts);
+  acts.append(w,a,c); sh.appendChild(acts);
 }
 
 

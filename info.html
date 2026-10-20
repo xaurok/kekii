@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mojii · Twitch en el móvil con emotes de 7TV</title>
+<meta name="description" content="Mojii: mira directos de Twitch y chatea con emotes de 7TV desde el móvil. Gratis, sin anuncios propios y sin instalar nada de la tienda.">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta property="og:title" content="Mojii">
+<meta property="og:description" content="Twitch en el móvil con emotes de 7TV">
+<meta property="og:image" content="icon-512.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#0a0a0b;--panel:#141416;--fg:#ececee;--muted:#8e8e96;--line:#26262b;--accent:#2fd1a9;--display:"Bricolage Grotesque",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+
+/* Cabecera */
+header .wrap{display:flex;align-items:center;gap:12px;height:64px}
+.logo{display:inline-block;font:800 24px var(--display);text-decoration:none;letter-spacing:-.01em}
+.logo b{color:var(--accent)}
+.sp{flex:1}
+.lang{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.lang:hover{color:var(--fg);border-color:#3a3a42}
+
+/* Portada */
+.hero{position:relative;text-align:center;padding:40px 0 30px}
+.hero::before{content:"";position:absolute;inset:-40px -20vw auto;height:420px;background:radial-gradient(closest-side,rgba(47,209,169,.16),transparent 70%);pointer-events:none;z-index:-1}
+h1{font:800 clamp(34px,8.5vw,64px)/1.05 var(--display);letter-spacing:-.02em;margin:0 auto 16px;max-width:15ch;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.lead{color:#b9b9c1;font-size:clamp(17px,4.2vw,20px);max-width:36ch;margin:0 auto 26px;text-wrap:pretty}
+.ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 24px;border-radius:14px;font-family:inherit;font-weight:700;font-size:17px;text-decoration:none;cursor:pointer;border:1px solid transparent}
+.btn.primary{background:var(--accent);color:#04201a}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--panel);border-color:var(--line);color:var(--fg)}
+.btn.ghost:hover{border-color:#3a3a42}
+.small{color:var(--muted);font-size:14px;margin:14px 0 0}
+
+/* Carrusel */
+.shots{position:relative;padding:34px 0 10px}
+.track{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px calc(50% - 125px) 24px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.track::-webkit-scrollbar{display:none}
+.shot{flex:0 0 250px;scroll-snap-align:center;margin:0;text-align:center;transition:opacity .25s,transform .25s;opacity:.5;transform:scale(.94)}
+.shot.on{opacity:1;transform:none}
+.phone{position:relative;aspect-ratio:9/19.5;border-radius:34px;background:#000;border:8px solid #1d1d21;box-shadow:0 0 0 1px #2c2c32,0 24px 60px rgba(0,0,0,.6);overflow:hidden}
+.phone img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.phone .ph{position:absolute;inset:0;display:grid;place-items:center;padding:20px;color:var(--muted);font-size:14px;background:repeating-linear-gradient(135deg,#111114 0 12px,#0d0d10 12px 24px)}
+.shot figcaption{margin-top:16px;font-size:15px;color:#c9c9d0;padding:0 6px}
+.shot figcaption b{display:block;font:800 18px var(--display);color:var(--fg);margin-bottom:2px}
+.arrow{position:absolute;top:calc(50% - 40px);width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(20,20,22,.9);color:var(--fg);font-size:20px;cursor:pointer;display:none;align-items:center;justify-content:center}
+.arrow.prev{left:4px}.arrow.next{right:4px}
+@media (hover:hover) and (min-width:700px){.arrow{display:flex}}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:4px}
+.dots button{width:8px;height:8px;border-radius:4px;border:0;padding:0;background:#3a3a42;cursor:pointer;transition:width .2s,background .2s}
+.dots button.on{width:22px;background:var(--accent)}
+
+/* Funciones */
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;padding:44px 0 10px}
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.feat h3{margin:0 0 4px;font:800 18px var(--display)}
+.feat p{margin:0;color:#b9b9c1;font-size:15px}
+.feat .ic{font-size:22px;display:block;margin-bottom:8px}
+
+footer{margin-top:50px;border-top:1px solid var(--line);padding:22px 0 calc(30px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.shot{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo" href="./">Moj<b>ii</b></a>
+  <span class="sp"></span>
+  <button class="lang" id="langBtn" type="button">English</button>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 data-es="Twitch en el móvil con emotes de <em>7TV</em>" data-en="Watch Twitch on mobile with <em>7TV</em> emotes"></h1>
+    <p class="lead" data-es="Mira directos, chatea y usa tus emotes favoritos. Gratis, sin anuncios propios y sin pasar por ninguna tienda." data-en="Watch streams, chat and use your favourite emotes. Free, no ads of our own and no app store needed."></p>
+    <div class="ctas">
+      <a class="btn primary" href="./" data-es="Abrir Mojii" data-en="Open Mojii"></a>
+      <button class="btn ghost" id="installBtn" type="button" data-es="Instalar app" data-en="Install app"></button>
+    </div>
+    <p class="small" id="installHelp" hidden></p>
+  </section>
+
+  <section class="shots" aria-label="Capturas">
+    <div class="track" id="track"></div>
+    <button class="arrow prev" id="prev" type="button" aria-label="Anterior">‹</button>
+    <button class="arrow next" id="next" type="button" aria-label="Siguiente">›</button>
+    <div class="dots" id="dots"></div>
+  </section>
+
+  <section class="feats" id="feats"></section>
+</main>
+
+<footer><div class="wrap">
+  <p data-es="Mojii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc." data-en="Mojii is an unofficial app. It is not affiliated with, sponsored or endorsed by Twitch Interactive, Inc. or 7TV. Twitch is a trademark of Twitch Interactive, Inc."></p>
+  <p><a id="privLink" href="privacidad.html" data-es="Política de privacidad" data-en="Privacy policy"></a></p>
+</div></footer>
+
+<script>
+// Para cambiar las capturas, sustituye los archivos preview-1.png … preview-5.png
+const SHOTS=[
+  {img:'preview-1.png', es:['Directo y chat','Mira el directo y chatea con emotes de 7TV y de Twitch.'], en:['Stream and chat','Watch the stream and chat with 7TV and Twitch emotes.']},
+  {img:'preview-2.png', es:['Tu inicio','Los canales que sigues en directo, de un vistazo.'], en:['Your home','The channels you follow that are live, at a glance.']},
+  {img:'preview-3.png', es:['Todos tus emotes','Busca entre los emotes de 7TV, del canal y los tuyos.'], en:['All your emotes','Search 7TV, channel and your own emotes.']},
+  {img:'preview-4.png', es:['Canales y clips','Perfiles, clips y vídeos sin salir de la app.'], en:['Channels and clips','Profiles, clips and videos without leaving the app.']},
+  {img:'preview-5.png', es:['Mini reproductor','Sigue viendo el directo mientras navegas.'], en:['Mini player','Keep watching while you browse.']}
+];
+const FEATS=[
+  {ic:'😀', es:['Emotes de 7TV','Los emotes del canal se ven en el chat y puedes usarlos al escribir.'], en:['7TV emotes','Channel emotes show in chat and you can use them when you type.']},
+  {ic:'💬', es:['Chat completo','Responder, menciones, susurros, insignias e historial de cada usuario.'], en:['Full chat','Replies, mentions, whispers, badges and each user’s history.']},
+  {ic:'⏭', es:['Siempre en directo','Se pone al día solo para que no vayas con retraso.'], en:['Always live','Catches up on its own so you’re never behind.']},
+  {ic:'🔒', es:['Tus datos, en tu móvil','Sin servidores propios ni seguimiento. Inicias sesión en la web oficial de Twitch.'], en:['Your data stays on your phone','No servers of our own and no tracking. You sign in on Twitch’s official site.']}
+];
+
+let LANG='es';
+try{ LANG=localStorage.getItem('tw_ui_lang') || ''; }catch(e){}
+if(!LANG) LANG=(navigator.language||'es').toLowerCase().startsWith('es')?'es':'en';
+const $=id=>document.getElementById(id);
+
+function render(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-es]').forEach(el=>{ el.innerHTML=el.dataset[LANG]; });
+  document.title = LANG==='es' ? 'Mojii · Twitch en el móvil con emotes de 7TV' : 'Mojii · Twitch on mobile with 7TV emotes';
+  $('langBtn').textContent = LANG==='es' ? 'English' : 'Español';
+  $('privLink').href = LANG==='es' ? 'privacidad.html' : 'privacy.html';
+  $('prev').setAttribute('aria-label', LANG==='es'?'Anterior':'Previous');
+  $('next').setAttribute('aria-label', LANG==='es'?'Siguiente':'Next');
+
+  const track=$('track'), keep=track.scrollLeft; track.textContent='';
+  SHOTS.forEach((s,i)=>{
+    const f=document.createElement('figure'); f.className='shot';
+    const ph=document.createElement('div'); ph.className='phone';
+    const img=document.createElement('img'); img.src=s.img; img.alt=s[LANG][0]; img.loading=i<2?'eager':'lazy';
+    img.onerror=()=>{ img.remove(); const p=document.createElement('div'); p.className='ph'; p.textContent=LANG==='es'?'Captura próximamente':'Screenshot coming soon'; ph.appendChild(p); };
+    ph.appendChild(img);
+    const cap=document.createElement('figcaption'); const b=document.createElement('b'); b.textContent=s[LANG][0]; cap.append(b, s[LANG][1]);
+    f.append(ph,cap); track.appendChild(f);
+  });
+  track.scrollLeft=keep;
+
+  const dots=$('dots'); dots.textContent='';
+  SHOTS.forEach((s,i)=>{ const d=document.createElement('button'); d.type='button'; d.setAttribute('aria-label',(LANG==='es'?'Captura ':'Screenshot ')+(i+1)); d.onclick=()=>go(i); dots.appendChild(d); });
+
+  const feats=$('feats'); feats.textContent='';
+  FEATS.forEach(x=>{ const d=document.createElement('div'); d.className='feat';
+    const ic=document.createElement('span'); ic.className='ic'; ic.textContent=x.ic; ic.setAttribute('aria-hidden','true');
+    const h=document.createElement('h3'); h.textContent=x[LANG][0]; const p=document.createElement('p'); p.textContent=x[LANG][1];
+    d.append(ic,h,p); feats.appendChild(d); });
+  mark();
+}
+
+// Carrusel
+const track=$('track');
+function cur(){ const items=[...track.children]; const mid=track.scrollLeft+track.clientWidth/2; let best=0,bd=1e9;
+  items.forEach((el,i)=>{ const c=el.offsetLeft+el.offsetWidth/2, d=Math.abs(c-mid); if(d<bd){bd=d;best=i;} }); return best; }
+function go(i){ const el=track.children[Math.max(0,Math.min(i,track.children.length-1))]; if(!el) return;
+  track.scrollTo({left:el.offsetLeft-(track.clientWidth-el.offsetWidth)/2, behavior:'smooth'}); }
+function mark(){ const c=cur(); [...track.children].forEach((el,i)=>el.classList.toggle('on',i===c)); [...$('dots').children].forEach((el,i)=>el.classList.toggle('on',i===c)); }
+let raf=0; track.addEventListener('scroll',()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(mark); },{passive:true});
+$('prev').onclick=()=>go(cur()-1); $('next').onclick=()=>go(cur()+1);
+window.addEventListener('resize',mark);
+
+$('langBtn').onclick=()=>{ LANG = LANG==='es'?'en':'es'; try{ localStorage.setItem('tw_ui_lang',LANG); }catch(e){} render(); };
+
+// Instalar
+let deferred=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; });
+window.addEventListener('appinstalled',()=>{ deferred=null; showHelp(LANG==='es'?'¡Instalada! Búscala en tu pantalla de inicio o en el cajón de apps.':'Installed! Find it on your home screen or in your app drawer.'); });
+function showHelp(t){ const h=$('installHelp'); h.textContent=t; h.hidden=false; }
+$('installBtn').onclick=async()=>{
+  if(deferred){ deferred.prompt(); try{ await deferred.userChoice; }catch(e){} deferred=null; return; }
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(matchMedia('(display-mode: standalone)').matches) showHelp(LANG==='es'?'Ya estás usando la app instalada.':'You’re already using the installed app.');
+  else if(ios) showHelp(LANG==='es'?'En Safari, toca Compartir ⬆︎ y luego «Añadir a pantalla de inicio».':'In Safari, tap Share ⬆︎ and then “Add to Home Screen”.');
+  else showHelp(LANG==='es'?'En Chrome, toca ⋮ arriba a la derecha y elige «Instalar aplicación».':'In Chrome, tap ⋮ at the top right and choose “Install app”.');
+};
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+render();
+</script>
+</body>
+</html>
