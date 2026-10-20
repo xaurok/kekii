@@ -451,6 +451,21 @@ html,body,#home{overscroll-behavior-y:contain}
 .langRow{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
 .langLab{font-size:13px;color:var(--muted);margin-right:4px}
 .langChip{padding:6px 14px}
+
+/* ---------- Cambiar de pestaña arrastrando (como la app de Twitch) ---------- */
+#homePage{will-change:transform}
+#homePage.snap{transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.homeInner .tabs{position:relative}
+#tabInk{position:absolute;bottom:-1px;height:3px;background:var(--fg);border-radius:2px;pointer-events:none;opacity:0}
+.homeInner .tabs.dragging .tab{border-bottom-color:transparent}
+.homeInner .tabs.dragging #tabInk{opacity:1}
+/* ---------- Deslizar el directo hacia abajo para volver al inicio ---------- */
+#pullStrip{display:none}
+body.watching:not(.mini) #pullStrip{display:flex;position:absolute;left:0;right:0;top:0;height:34px;z-index:4;justify-content:center;align-items:flex-start;padding-top:6px;touch-action:none}
+#pullStrip span{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.55);box-shadow:0 0 4px rgba(0,0,0,.6)}
+body.peekHome #home{display:block;position:fixed;inset:0;z-index:0;padding-top:env(safe-area-inset-top,0px)}
+body.peekHome main{position:relative;z-index:2;background:var(--bg);border-radius:14px;overflow:hidden;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
+main.snap{transition:transform .22s ease-out}
 </style>
 </head>
 <body>
@@ -472,15 +487,17 @@ html,body,#home{overscroll-behavior-y:contain}
       <button class="tab" role="tab" id="tabClips" aria-selected="false">Clips</button>
       <button class="tab" role="tab" id="tabCats" aria-selected="false">Categorías</button>
     </div>
-    <div id="catHead" hidden></div>
-    <div class="chips" id="chips"></div>
-    <div class="grid" id="grid"></div>
-    <div id="homeMsg"></div>
-    <button id="moreBtn" class="more" hidden>Cargar más</button>
+    <div id="homePage">
+      <div id="catHead" hidden></div>
+      <div class="chips" id="chips"></div>
+      <div class="grid" id="grid"></div>
+      <div id="homeMsg"></div>
+      <button id="moreBtn" class="more" hidden>Cargar más</button>
+    </div>
   </div>
 </section>
 <main>
-  <div id="playerWrap"><div id="playerSlot"></div>
+  <div id="playerWrap"><div id="playerSlot"></div><div id="pullStrip" aria-hidden="true"><span></span></div>
     <div id="miniBar"><span id="miniName"></span><button id="miniClose" type="button" aria-label="Cerrar directo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <button id="chatToggle" type="button" aria-label="Mostrar chat"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10h.01M12 10h.01M15 10h.01" stroke-linecap="round" stroke-width="2.6"/></svg>Chat</button></div>
   <div id="chatCol">
@@ -611,7 +628,10 @@ const EN = {
  'Confirma con <b>Instalar</b>. Aparecerá el icono de Mojii en tu pantalla de inicio.':'Confirm with <b>Install</b>. The Mojii icon will appear on your home screen.',
  'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
  'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Mojii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Mojii</b>.',
- 'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.','ahora':'now','EN DIRECTO':'LIVE','seguidores':'followers','seguidores ·':'followers ·','En Twitch':'On Twitch',
+ 'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.',
+ 'No hay clips de esta semana de los canales que sigues.':'No clips this week from the channels you follow.',
+ 'No hay clips de esta semana de los canales que sigues en español.':'No Spanish clips this week from the channels you follow.',
+ 'No hay clips populares esta semana.':'No popular clips this week.','No hay clips populares en español esta semana.':'No popular Spanish clips this week.','ahora':'now','EN DIRECTO':'LIVE','seguidores':'followers','seguidores ·':'followers ·','En Twitch':'On Twitch',
  'Tu navegador no permite pantalla completa aquí':"Your browser doesn't allow full screen here",'Salir':'Log out','Copia el enlace:':'Copy the link:',
 };
 const EN_PATTERNS = [
@@ -1883,7 +1903,79 @@ function swipeHome(dir){
   home.tab=homeTabs[i]; store.set('tw_tab', home.tab); $('home').scrollTop=0;
   animate($('home').firstElementChild, dir); loadHome();
 }
-addSwipe($('home'), ()=>swipeHome(-1), ()=>swipeHome(1));
+// Pestañas del inicio: el contenido sigue al dedo y la raya de la pestaña se desliza, como en Twitch
+(()=>{
+  const h=$('home'), page=$('homePage'), tabsEl=$('tabFollow').parentElement;
+  const ink=document.createElement('span'); ink.id='tabInk'; tabsEl.appendChild(ink);
+  let x0=null, y0=0, t0=0, dx=0, active=false;
+  const tabBtn=t=>({follow:$('tabFollow'),live:$('tabLive'),clips:$('tabClips'),cats:$('tabCats')})[t];
+  function placeInk(frac){ // frac: -1..1 hacia la pestaña anterior/siguiente
+    const i=homeTabs.indexOf(home.tab), cur=tabBtn(home.tab), nb=tabBtn(homeTabs[i+(frac>0?1:-1)]);
+    const r0=cur.getBoundingClientRect(), base=tabsEl.getBoundingClientRect();
+    let L=r0.left, W=r0.width;
+    if(nb){ const r1=nb.getBoundingClientRect(), f=Math.min(1,Math.abs(frac)); L=r0.left+(r1.left-r0.left)*f; W=r0.width+(r1.width-r0.width)*f; }
+    ink.style.left=(L-base.left+tabsEl.scrollLeft)+'px'; ink.style.width=W+'px';
+  }
+  h.addEventListener('touchstart', e=>{
+    if(e.touches.length!==1 || e.target.closest('.chips, input')){ x0=null; return; }
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); dx=0; active=false;
+  }, {passive:true});
+  h.addEventListener('touchmove', e=>{
+    if(x0===null) return;
+    const mx=e.touches[0].clientX-x0, my=e.touches[0].clientY-y0;
+    if(!active){ if(Math.abs(mx)<10 || Math.abs(mx)<Math.abs(my)*1.3){ if(Math.abs(my)>12) x0=null; return; } active=true; page.classList.remove('snap'); tabsEl.classList.add('dragging'); }
+    const i=homeTabs.indexOf(home.tab), canPrev=i>0 || (home.tab==='cats' && home.cat), canNext=i<homeTabs.length-1 && !(home.tab==='cats' && home.cat);
+    dx=mx; if((dx>0 && !canPrev) || (dx<0 && !canNext)) dx=mx*0.25;
+    page.style.transform='translateX('+dx+'px)';
+    placeInk(-dx/h.clientWidth);
+    if(e.cancelable) e.preventDefault();
+  }, {passive:false});
+  h.addEventListener('touchend', ()=>{
+    if(x0===null) return; x0=null; if(!active) return; active=false;
+    const W=h.clientWidth, fast=Math.abs(dx)>40 && Math.abs(dx)/(Date.now()-t0)>0.45;
+    const i=homeTabs.indexOf(home.tab), dir=dx<0?-1:1;
+    const canGo = dir<0 ? (i<homeTabs.length-1 && !(home.tab==='cats' && home.cat)) : (i>0 || (home.tab==='cats' && home.cat));
+    page.classList.add('snap');
+    if((Math.abs(dx)>W*0.28 || fast) && canGo){
+      page.style.transform='translateX('+(dir*W)+'px)'; placeInk(-dir);
+      setTimeout(()=>{
+        page.classList.remove('snap'); page.style.transform='translateX('+(-dir*W)+'px)';
+        if(home.tab==='cats' && home.cat && dir>0) home.cat=null;
+        else { home.tab=homeTabs[i+(dir<0?1:-1)]; store.set('tw_tab', home.tab); }
+        h.scrollTop=0; loadHome();
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ page.classList.add('snap'); page.style.transform='translateX(0)'; tabsEl.classList.remove('dragging'); }));
+      }, 210);
+    } else {
+      page.style.transform='translateX(0)'; placeInk(0);
+      setTimeout(()=>tabsEl.classList.remove('dragging'), 220);
+    }
+  });
+})();
+// Deslizar el directo hacia abajo (desde la barrita de arriba del vídeo o la barra del canal) para volver al inicio
+(()=>{
+  const m=document.querySelector('main'); let y0=null, x0=0, dy=0, t0=0, active=false;
+  const start=e=>{ if(!document.body.classList.contains('watching') || document.body.classList.contains('mini') || e.touches.length!==1) return;
+    if(e.target.closest('button') && !e.target.closest('#pullStrip')) { if(e.currentTarget.id!=='statusBar') return; }
+    y0=e.touches[0].clientY; x0=e.touches[0].clientX; dy=0; t0=Date.now(); active=false; };
+  const move=e=>{
+    if(y0===null) return; const my=e.touches[0].clientY-y0, mx=e.touches[0].clientX-x0;
+    if(!active){ if(my<10 || Math.abs(mx)>my){ if(my<-6 || Math.abs(mx)>14) y0=null; return; } active=true; m.classList.remove('snap'); document.body.classList.add('peekHome'); if(!$('grid').childElementCount) loadHome(); }
+    dy=Math.max(0,my); m.style.transform='translateY('+dy+'px) scale('+(1-Math.min(dy/innerHeight,1)*0.08)+')';
+    if(e.cancelable) e.preventDefault();
+  };
+  const end=()=>{
+    if(y0===null) return; y0=null; if(!active) return; active=false;
+    const fast=dy>40 && dy/(Date.now()-t0)>0.5;
+    m.classList.add('snap');
+    if(dy>innerHeight*0.22 || fast){
+      m.style.transform='translateY('+innerHeight+'px) scale(.9)';
+      setTimeout(()=>{ m.classList.remove('snap'); m.style.transform=''; document.body.classList.remove('peekHome'); showHome(true); }, 220);
+    } else {
+      m.style.transform=''; setTimeout(()=>{ m.classList.remove('snap'); document.body.classList.remove('peekHome'); }, 230);
+    }
+  };
+  [$('pullStrip'), $('statusBar')].forEach(el=>{ el.addEventListener('touchstart', start, {passive:true}); el.addEventListener('touchmove', move, {passive:false}); el.addEventListener('touchend', end); el.addEventListener('touchcancel', end); });
+})();
 function swipeEm(dir){
   if($('emSearch').value) return;
   const tabs=[...$('emTabs').querySelectorAll('.emTab')]; const i=tabs.findIndex(t=>t.getAttribute('aria-selected')==='true')+(dir<0?1:-1);
