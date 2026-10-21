@@ -773,6 +773,7 @@ async function validate(){
   if(!token) return;
   try{
     const r = await fetch('https://id.twitch.tv/oauth2/validate',{headers:{Authorization:'OAuth '+token}});
+    if(gen!==home.gen) return;
     if(!r.ok) throw 0;
     const j = await r.json(); login = j.login; me.name = login; me.id = j.user_id; me.scopes = j.scopes||[]; store.set('tw_login', login);
     $('loginBtn').textContent = 'Salir'; showUser(j.login, null);
@@ -1372,7 +1373,9 @@ function streamCard(st){
   return [b,av];
 }
 async function loadHome(append){
-  if(home.loading) return; home.loading=true;
+  // Cada carga lleva un número: si cambias de pestaña a mitad, la carga vieja se descarta
+  if(append && home.loading) return;
+  const gen = home.gen = (home.gen||0)+1; home.loading=true;
   const grid=$('grid'); if(!append){ grid.textContent=''; home.cursor=null; }
   $('moreBtn').hidden=true; homeMsg('');
   $('tabFollow').setAttribute('aria-selected', String(home.tab==='follow'));
@@ -1384,7 +1387,7 @@ async function loadHome(append){
   renderChips(); renderCatHead();
   try{
     if(!token){ homeMsg('Inicia sesión para ver quién está en directo y los canales que sigues.', true); return; }
-    if(home.tab==='clips'){ await loadClipsTab(); return; }
+    if(home.tab==='clips'){ await loadClipsTab(gen); return; }
     let path;
     if(home.tab==='follow'){
       if(!me.id){ homeMsg('No se pudo cargar tu cuenta.'); return; }
@@ -1401,7 +1404,7 @@ async function loadHome(append){
     if(!append) homeMsg('Cargando…');
     const r = await fetch('https://api.twitch.tv/helix/'+path,{headers:{'Client-Id':CLIENT_ID, Authorization:'Bearer '+token}});
     if(!r.ok) throw 0;
-    const j = await r.json(); homeMsg('');
+    const j = await r.json(); if(gen!==home.gen) return; homeMsg('');
     home.cursor = j.pagination && j.pagination.cursor || null;
     if(catList){
       const cards=j.data.map(catCard); cards.forEach(([b])=>grid.appendChild(b));
@@ -1421,8 +1424,8 @@ async function loadHome(append){
     const cards=j.data.map(streamCard); cards.forEach(([b])=>grid.appendChild(b));
     addAvatars(j.data, cards.map(([,av],i)=>[j.data[i].user_id,av]));
     $('moreBtn').hidden = !home.cursor || home.tab==='follow';
-  }catch(e){ if(!append) homeMsg('No se pudieron cargar los directos. Prueba de nuevo en un momento.'); }
-  finally{ home.loading=false; }
+  }catch(e){ if(!append && gen===home.gen) homeMsg('No se pudieron cargar los directos. Prueba de nuevo en un momento.'); }
+  finally{ if(gen===home.gen) home.loading=false; }
 }
 $('tabFollow').onclick=()=>{ home.tab='follow'; store.set('tw_tab','follow'); loadHome(); };
 $('tabLive').onclick=()=>{ home.tab='live'; store.set('tw_tab','live'); loadHome(); };
@@ -1474,13 +1477,14 @@ function clipCard(c, i, list){
   b.append(th,t,m); b.onclick=()=>{ if(list) clipsState.list=list; openClipViewer(i); };
   return b;
 }
-async function loadClipsTab(){
+async function loadClipsTab(gen){
   homeMsg('Cargando clips…');
   try{
-    const list=await fetchClips(); clipsState.list=list; homeMsg('');
+    const list=await fetchClips(); if(gen!==home.gen) return; clipsState.list=list; homeMsg('');
     if(!list.length){ homeMsg(clipsState.src==='follow' ? 'No hay clips de esta semana de los canales que sigues'+(home.lang==='es'?' en español.':'.') : 'No hay clips populares'+(home.lang==='es'?' en español':'')+' esta semana.'); return; }
     const grid=$('grid'); list.forEach((c,i)=>grid.appendChild(clipCard(c,i,list)));
   }catch(e){
+    if(gen!==home.gen) return;
     homeMsg(e.message==='scope' ? 'Vuelve a iniciar sesión para ver los clips de los canales que sigues.' : 'No se pudieron cargar los clips ahora mismo.', e.message==='scope');
   }
 }
