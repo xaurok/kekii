@@ -437,8 +437,11 @@ html,body,#home{overscroll-behavior-y:contain}
 .instHead img{width:52px;height:52px;border-radius:12px;flex:none}
 .pipIc{width:52px;height:52px;border-radius:12px;flex:none;background:#1b1b1f;border:1px solid var(--line);position:relative}
 .pipIc span{position:absolute;right:7px;bottom:9px;width:22px;height:15px;border-radius:3px;background:var(--accent)}
-.msg.pipTip{cursor:pointer;font-style:normal;color:var(--fg);background:rgba(47,209,169,.08);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;margin:6px 0}
-.msg.pipTip u{color:var(--accent)}
+#pipBanner{display:flex;align-items:stretch;gap:4px;margin:6px 10px 2px;background:#12241f;border:1px solid rgba(47,209,169,.35);border-left:3px solid var(--accent);border-radius:10px;flex:none}
+body:not(.watching) #pipBanner{display:none}
+#pipBanner .pipGo{flex:1;text-align:left;background:none;border:0;color:var(--fg);font:inherit;font-size:14px;line-height:1.4;padding:9px 4px 9px 11px;cursor:pointer}
+#pipBanner .pipGo u{color:var(--accent);white-space:nowrap}
+#pipBanner .pipX{background:none;border:0;color:var(--muted);font-size:16px;width:40px;flex:none;cursor:pointer}
 .instNote{font-size:12px;color:var(--muted);margin-top:12px}
 
 /* ---------- Botón ir al directo ---------- */
@@ -2025,6 +2028,9 @@ function createPlayer(c){
   // cambiar de tamaño). Al empezar, si va por detrás, saltamos solos al momento actual.
   const slot=$('playerSlot'); slot.innerHTML=''; tPlayer=null;
   const createdAt=Date.now(); let firstPlay=true;
+  // Consejo de la ventana flotante: al empezar a reproducir o, si el reproductor no avisa, a los 20 s de abrir el canal
+  let tipped=false; const tip=()=>{ if(tipped || c!==channel) return; tipped=true; maybeShowPipTip(); };
+  setTimeout(tip, 20000);
   const fallback=()=>{ slot.innerHTML=`<iframe allowfullscreen allow="autoplay; fullscreen; picture-in-picture" src="https://player.twitch.tv/?channel=${encodeURIComponent(c)}&parent=${location.hostname}&autoplay=false&muted=false"></iframe>`; };
   const make=()=>{
     if(c!==channel) return;
@@ -2037,7 +2043,7 @@ function createPlayer(c){
       finally{ document.createElement=origCreate; }
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
         if(!firstPlay || c!==channel) return; firstPlay=false;
-        setTimeout(maybeShowPipTip, 4000);
+        setTimeout(tip, 4000);
         // Comprobamos el retraso un momento después de empezar y, si hace falta, saltamos al directo
         setTimeout(()=>{
           if(c!==channel || !tPlayer) return;
@@ -2593,12 +2599,19 @@ function openPipGuide(){
 }
 function pipButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
 function maybeShowPipTip(){
-  // Sale hasta que el usuario abre la guía, como mucho 3 veces
+  // Aviso fijo encima del chat (en un chat rápido, un mensaje se perdería). Sale hasta que el usuario
+  // abre la guía o lo cierra, como mucho 3 veces.
+  if($('pipBanner')) return;
   const seen=store.get('tw_pip_tip'); if(seen==='done' || +seen>=3) return; store.set('tw_pip_tip', String((+seen||0)+1));
-  const d=document.createElement('div'); d.className='msg sys pipTip'; d.setAttribute('role','button'); d.tabIndex=0;
-  d.innerHTML=T('💡 <b>Consejo:</b> puedes seguir viendo el directo fuera de la app en una ventanita flotante.')+' <u>'+T('Ver cómo')+'</u>';
-  d.onclick=openPipGuide; d.onkeydown=e=>{ if(e.key==='Enter') openPipGuide(); };
-  push(d);
+  const d=document.createElement('div'); d.id='pipBanner';
+  const go=document.createElement('button'); go.type='button'; go.className='pipGo';
+  go.innerHTML=T('💡 <b>Consejo:</b> puedes seguir viendo el directo fuera de la app en una ventanita flotante.')+' <u>'+T('Ver cómo')+'</u>';
+  go.onclick=()=>{ d.remove(); openPipGuide(); };
+  const x=document.createElement('button'); x.type='button'; x.className='pipX'; x.setAttribute('aria-label',T('Cerrar')); x.textContent='✕';
+  x.onclick=()=>{ store.set('tw_pip_tip','done'); d.remove(); };
+  const wasBottom = stick || chatEl.scrollHeight-chatEl.scrollTop-chatEl.clientHeight<40;
+  d.append(go,x); $('chat').before(d);
+  if(wasBottom) chatEl.scrollTop=chatEl.scrollHeight;
 }
 
 function aboutButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent='Acerca de Mojii'; b.onclick=openAbout; return b; }
