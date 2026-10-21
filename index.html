@@ -435,6 +435,10 @@ html,body,#home{overscroll-behavior-y:contain}
 .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:6px;background:var(--field);border:1px solid var(--line);font-weight:700;vertical-align:middle}
 .instHead{display:flex;gap:12px;align-items:center}
 .instHead img{width:52px;height:52px;border-radius:12px;flex:none}
+.pipIc{width:52px;height:52px;border-radius:12px;flex:none;background:#1b1b1f;border:1px solid var(--line);position:relative}
+.pipIc span{position:absolute;right:7px;bottom:9px;width:22px;height:15px;border-radius:3px;background:var(--accent)}
+.msg.pipTip{cursor:pointer;font-style:normal;color:var(--fg);background:rgba(47,209,169,.08);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;margin:6px 0}
+.msg.pipTip u{color:var(--accent)}
 .instNote{font-size:12px;color:var(--muted);margin-top:12px}
 
 /* ---------- Botón ir al directo ---------- */
@@ -638,6 +642,18 @@ const EN = {
  'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
  'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Mojii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Mojii</b>.',
  'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.',
+ 'Sigue viendo el directo fuera de la app':'Keep watching outside the app','El directo sigue sonando en una ventanita flotante mientras usas otras apps.':'The stream keeps playing in a small floating window while you use other apps.',
+ 'Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.':'Put the stream in <b>full screen</b> with the player’s <span class="kbd">⛶</span> button.',
+ 'Toca el botón de <b>imagen en imagen</b> <span class="kbd">⧉</span> que aparece arriba.':'Tap the <b>picture-in-picture</b> <span class="kbd">⧉</span> button at the top.',
+ 'Sal de la app: el directo seguirá en una ventanita flotante.':'Leave the app: the stream will keep going in a small floating window.',
+ 'Sal con el botón o el gesto de <b>inicio</b> (no con "atrás").':'Leave with the <b>home</b> button or gesture (not “back”).',
+ 'El directo pasa a una <b>ventanita flotante</b> y sigue sonando.':'The stream moves to a <b>floating window</b> and keeps playing.',
+ 'Arrástrala para moverla y usa dos dedos para cambiar su tamaño.':'Drag it to move it, and use two fingers to resize it.',
+ 'Llévala al borde de la pantalla para esconderla: el sonido sigue.':'Push it to the edge of the screen to tuck it away: the sound keeps going.',
+ 'Tócala para volver a Mojii, o arrástrala hacia abajo para cerrarla.':'Tap it to go back to Mojii, or drag it down to close it.',
+ '¿No aparece la ventanita? Ve a Ajustes → Aplicaciones → Chrome → Imagen en imagen y actívalo.':'No floating window? Go to Settings → Apps → Chrome → Picture-in-picture and turn it on.',
+ 'Entendido':'Got it','Ver fuera de la app (ventana flotante)':'Watch outside the app (floating window)',
+ '💡 <b>Consejo:</b> puedes seguir viendo el directo fuera de la app en una ventanita flotante.':'💡 <b>Tip:</b> you can keep watching the stream outside the app in a small floating window.','Ver cómo':'Show me how',
  'Página de Mojii':'Mojii website',
  'No hay clips de esta semana de los canales que sigues.':'No clips this week from the channels you follow.',
  'No hay clips de esta semana de los canales que sigues en español.':'No Spanish clips this week from the channels you follow.',
@@ -777,7 +793,7 @@ $('who').onclick = ()=>{
     const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent='Iniciar sesión con Twitch'; b.onclick=goLogin;
     acts.appendChild(b); sh.append(h,p,acts);
     if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Mojii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
-    sh.appendChild(langPicker()); sh.appendChild(aboutButton()); sh.appendChild(legalNote());
+    sh.appendChild(langPicker()); sh.appendChild(pipButton()); sh.appendChild(aboutButton()); sh.appendChild(legalNote());
     return;
   }
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -793,6 +809,7 @@ $('who').onclick = ()=>{
   acts.append(b1,b2); sh.appendChild(acts);
   sh.appendChild(langPicker());
  
+  sh.appendChild(pipButton());
   sh.appendChild(aboutButton());
   if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Mojii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
   sh.appendChild(legalNote());
@@ -2020,6 +2037,7 @@ function createPlayer(c){
       finally{ document.createElement=origCreate; }
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
         if(!firstPlay || c!==channel) return; firstPlay=false;
+        setTimeout(maybeShowPipTip, 4000);
         // Comprobamos el retraso un momento después de empezar y, si hace falta, saltamos al directo
         setTimeout(()=>{
           if(c!==channel || !tPlayer) return;
@@ -2539,6 +2557,48 @@ $('text').addEventListener('keydown', e=>{
 // ---------- Acerca de Mojii (aviso de app no oficial y privacidad) ----------
 function legalNote(){ const n=document.createElement('p'); n.className='legalNote';
   n.innerHTML=T('Mojii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>').replace('privacidad.html', PRIVACY_URL); return n; }
+
+// ---------- Guía: seguir viendo fuera de la app (ventana flotante / PiP) ----------
+function openPipGuide(){
+  closeSheet();
+  const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
+  const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
+  const head=document.createElement('div'); head.className='instHead';
+  const ic=document.createElement('div'); ic.className='pipIc'; ic.setAttribute('aria-hidden','true'); ic.innerHTML='<span></span>';
+  const t=document.createElement('div'); const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent=T('Sigue viendo el directo fuera de la app');
+  const sub=document.createElement('div'); sub.className='pd'; sub.textContent=T('El directo sigue sonando en una ventanita flotante mientras usas otras apps.');
+  t.append(h,sub); head.append(ic,t); sh.appendChild(head);
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const ol=document.createElement('ol'); ol.className='instSteps';
+  const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=T(html); li.appendChild(sp); ol.appendChild(li); };
+  if(ios){
+    step('Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.');
+    step('Toca el botón de <b>imagen en imagen</b> <span class="kbd">⧉</span> que aparece arriba.');
+    step('Sal de la app: el directo seguirá en una ventanita flotante.');
+  } else {
+    step('Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.');
+    step('Sal con el botón o el gesto de <b>inicio</b> (no con "atrás").');
+    step('El directo pasa a una <b>ventanita flotante</b> y sigue sonando.');
+  }
+  sh.appendChild(ol);
+  const tips=document.createElement('ul'); tips.className='aboutList';
+  ['Arrástrala para moverla y usa dos dedos para cambiar su tamaño.','Llévala al borde de la pantalla para esconderla: el sonido sigue.','Tócala para volver a Mojii, o arrástrala hacia abajo para cerrarla.'].forEach(x=>{ const l=document.createElement('li'); l.textContent=T(x); tips.appendChild(l); });
+  sh.appendChild(tips);
+  if(!ios){ const n=document.createElement('p'); n.className='instNote'; n.style.textAlign='left';
+    n.textContent=T('¿No aparece la ventanita? Ve a Ajustes → Aplicaciones → Chrome → Imagen en imagen y actívalo.'); sh.appendChild(n); }
+  const acts=document.createElement('div'); acts.className='acts'; acts.style.gridTemplateColumns='1fr';
+  const ok=document.createElement('button'); ok.type='button'; ok.className='primary'; ok.textContent=T('Entendido'); ok.onclick=closeSheet;
+  acts.appendChild(ok); sh.appendChild(acts);
+}
+function pipButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
+function maybeShowPipTip(){
+  if(store.get('tw_pip_tip')) return; store.set('tw_pip_tip','1');
+  const d=document.createElement('div'); d.className='msg sys pipTip'; d.setAttribute('role','button'); d.tabIndex=0;
+  d.innerHTML=T('💡 <b>Consejo:</b> puedes seguir viendo el directo fuera de la app en una ventanita flotante.')+' <u>'+T('Ver cómo')+'</u>';
+  d.onclick=openPipGuide; d.onkeydown=e=>{ if(e.key==='Enter') openPipGuide(); };
+  push(d);
+}
+
 function aboutButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent='Acerca de Mojii'; b.onclick=openAbout; return b; }
 function openAbout(){
   closeSheet();
