@@ -1060,7 +1060,11 @@ function colorFor(name,c){ if(c) return c; let h=0; for(const ch of name) h=(h*3
 
 function emoteNode(url,name){
   const s=document.createElement('span'); s.className='em';
-  const i=document.createElement('img'); i.src=url; i.alt=i.title=name; s.appendChild(i); return s;
+  const i=document.createElement('img'); i.alt=i.title=name;
+  // Si la imagen del emote no carga, se muestra su nombre como texto en vez de un hueco vacío
+  i.onerror=()=>{ s.replaceWith(document.createTextNode(name)); };
+  i.onload=()=>{ if(!i.naturalWidth) i.onerror(); };
+  i.src=url; s.appendChild(i); return s;
 }
 function renderText(container, text, twEmotes, cheer){
   // twEmotes: [{start,end,id}] using code point indices
@@ -1077,7 +1081,7 @@ function renderText(container, text, twEmotes, cheer){
       if(cheer){ const cn=cheerNode(w); if(cn){ container.appendChild(cn); last=null; continue; } }
       const e7 = emotes7.get(w);
       if(e7){
-        if(e7.zw && last){ const i=document.createElement('img'); i.src=e7.url; i.className='zw'; i.alt=i.title=w; last.appendChild(i); }
+        if(e7.zw && last){ const i=document.createElement('img'); i.className='zw'; i.alt=i.title=w; i.onerror=()=>i.remove(); i.src=e7.url; last.appendChild(i); }
         else { last = emoteNode(e7.url,w); container.appendChild(last); }
       } else if(w){
         if(/\S/.test(w)) last = null;
@@ -1116,7 +1120,10 @@ function parse(line){
     line.slice(1,i).split(';').forEach(kv=>{const j=kv.indexOf('='); const k=kv.slice(0,j); const v=kv.slice(j+1).replace(/\\(.)/g,(x,c)=>({s:' ',':':';',r:'\r',n:'\n','\\':'\\'}[c]??c)); m.tags[k]=v;}); line=line.slice(i+1); }
   if(line[0]===':'){ const i=line.indexOf(' '); m.prefix=line.slice(1,i); line=line.slice(i+1); }
   const ti=line.indexOf(' :'); if(ti>=0){ m.trailing=line.slice(ti+2); line=line.slice(0,ti); }
-  const parts=line.split(' '); m.cmd=parts[0]; m.params=parts.slice(1); return m;
+  const parts=line.split(' ').filter(Boolean); m.cmd=parts[0]; m.params=parts.slice(1);
+  // En IRC, si el mensaje es una sola palabra puede venir sin ':' (lo hace el historial de mensajes)
+  if(m.trailing===undefined && m.params.length>=2) m.trailing=m.params.pop();
+  return m;
 }
 function parseEmotes(tag){
   if(!tag) return [];
