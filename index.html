@@ -437,6 +437,10 @@ html,body,#home{overscroll-behavior-y:contain}
 .instHead img{width:52px;height:52px;border-radius:12px;flex:none}
 .pipIc{width:52px;height:52px;border-radius:12px;flex:none;background:#1b1b1f;border:1px solid var(--line);position:relative}
 .pipIc span{position:absolute;right:7px;bottom:9px;width:22px;height:15px;border-radius:3px;background:var(--accent)}
+#updBanner{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:9999;display:flex;align-items:center;gap:10px;width:min(calc(100% - 24px),440px);background:#12241f;color:var(--fg);border:1px solid rgba(47,209,169,.45);border-radius:12px;padding:8px 6px 8px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:14px}
+#updBanner span{flex:1}
+#updBanner .updGo{background:var(--accent);color:var(--accent-fg);border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+#updBanner .updX{background:none;border:0;color:var(--muted);font-size:16px;width:34px;cursor:pointer}
 #pipBanner{display:flex;align-items:stretch;gap:4px;margin:6px 10px 2px;background:#12241f;border:1px solid rgba(47,209,169,.35);border-left:3px solid var(--accent);border-radius:10px;flex:none}
 body:not(.watching) #pipBanner{display:none}
 #pipBanner .pipGo{flex:1;text-align:left;background:none;border:0;color:var(--fg);font:inherit;font-size:14px;line-height:1.4;padding:9px 4px 9px 11px;cursor:pointer}
@@ -645,6 +649,7 @@ const EN = {
  'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
  'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Mojii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Mojii</b>.',
  'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.',
+ 'Hay una nueva versión de Mojii':'A new version of Mojii is available','Actualizar':'Update','Actualizando…':'Updating…',
  'Sigue viendo el directo fuera de la app':'Keep watching outside the app','El directo sigue sonando en una ventanita flotante mientras usas otras apps.':'The stream keeps playing in a small floating window while you use other apps.',
  'Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.':'Put the stream in <b>full screen</b> with the player’s <span class="kbd">⛶</span> button.',
  'Toca el botón de <b>imagen en imagen</b> <span class="kbd">⧉</span> que aparece arriba.':'Tap the <b>picture-in-picture</b> <span class="kbd">⧉</span> button at the top.',
@@ -2670,7 +2675,33 @@ function openAbout(){
 
 
 
-if('serviceWorker' in navigator){ navigator.serviceWorker.register(BASE+'sw.js',{scope:BASE}).catch(()=>{}); }
+// ---------- Aviso de versión nueva ----------
+let swReg=null, updateRequested=false;
+function showUpdateBanner(){
+  if($('updBanner')) return;
+  const d=document.createElement('div'); d.id='updBanner'; d.setAttribute('role','status');
+  const t=document.createElement('span'); t.textContent=T('Hay una nueva versión de Mojii');
+  const b=document.createElement('button'); b.type='button'; b.className='updGo'; b.textContent=T('Actualizar');
+  b.onclick=()=>{ updateRequested=true; b.disabled=true; b.textContent=T('Actualizando…');
+    const w=swReg && swReg.waiting; if(w) w.postMessage({type:'SKIP_WAITING'}); else location.reload();
+    setTimeout(()=>location.reload(), 4000); };
+  const x=document.createElement('button'); x.type='button'; x.className='updX'; x.setAttribute('aria-label',T('Cerrar')); x.textContent='✕'; x.onclick=()=>d.remove();
+  d.append(t,b,x); document.body.appendChild(d);
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register(BASE+'sw.js',{scope:BASE}).then(reg=>{
+    swReg=reg;
+    if(reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+    reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw) return;
+      nw.addEventListener('statechange',()=>{ if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdateBanner(); }); });
+    // Busca versiones nuevas al volver a la app y cada 30 minutos
+    const check=()=>reg.update().catch(()=>{});
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check(); });
+    setInterval(check, 30*60*1000);
+  }).catch(()=>{});
+  let reloading=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!updateRequested || reloading) return; reloading=true; location.reload(); });
+}
 (async()=>{
   await validate();
   if(!token) showGuest();
