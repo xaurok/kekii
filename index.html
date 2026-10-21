@@ -773,7 +773,6 @@ async function validate(){
   if(!token) return;
   try{
     const r = await fetch('https://id.twitch.tv/oauth2/validate',{headers:{Authorization:'OAuth '+token}});
-    if(gen!==home.gen) return;
     if(!r.ok) throw 0;
     const j = await r.json(); login = j.login; me.name = login; me.id = j.user_id; me.scopes = j.scopes||[]; store.set('tw_login', login);
     $('loginBtn').textContent = 'Salir'; showUser(j.login, null);
@@ -1403,6 +1402,7 @@ async function loadHome(append){
     if(append && home.cursor) path+='&after='+home.cursor;
     if(!append) homeMsg('Cargando…');
     const r = await fetch('https://api.twitch.tv/helix/'+path,{headers:{'Client-Id':CLIENT_ID, Authorization:'Bearer '+token}});
+    if(gen!==home.gen) return;
     if(!r.ok) throw 0;
     const j = await r.json(); if(gen!==home.gen) return; homeMsg('');
     home.cursor = j.pagination && j.pagination.cursor || null;
