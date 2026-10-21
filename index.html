@@ -2560,6 +2560,7 @@ function legalNote(){ const n=document.createElement('p'); n.className='legalNot
 
 // ---------- Guía: seguir viendo fuera de la app (ventana flotante / PiP) ----------
 function openPipGuide(){
+  store.set('tw_pip_tip','done');
   closeSheet();
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
   const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
@@ -2592,7 +2593,8 @@ function openPipGuide(){
 }
 function pipButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
 function maybeShowPipTip(){
-  if(store.get('tw_pip_tip')) return; store.set('tw_pip_tip','1');
+  // Sale hasta que el usuario abre la guía, como mucho 3 veces
+  const seen=store.get('tw_pip_tip'); if(seen==='done' || +seen>=3) return; store.set('tw_pip_tip', String((+seen||0)+1));
   const d=document.createElement('div'); d.className='msg sys pipTip'; d.setAttribute('role','button'); d.tabIndex=0;
   d.innerHTML=T('💡 <b>Consejo:</b> puedes seguir viendo el directo fuera de la app en una ventanita flotante.')+' <u>'+T('Ver cómo')+'</u>';
   d.onclick=openPipGuide; d.onkeydown=e=>{ if(e.key==='Enter') openPipGuide(); };
