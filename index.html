@@ -802,7 +802,7 @@ $('who').onclick = ()=>{
     const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent='Iniciar sesión con Twitch'; b.onclick=goLogin;
     acts.appendChild(b); sh.append(h,p,acts);
     if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Kekii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
-    sh.appendChild(langPicker()); sh.appendChild(pipButton()); sh.appendChild(aboutButton()); sh.appendChild(legalNote());
+    sh.appendChild(pipButton()); sh.appendChild(aboutButton()); sh.appendChild(langPicker()); sh.appendChild(legalNote());
     return;
   }
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -816,11 +816,10 @@ $('who').onclick = ()=>{
   const b2=document.createElement('button'); b2.type='button'; b2.textContent='Cerrar sesión'; b2.style.color='#ff6b6b';
   b2.onclick=()=>{ store.set('tw_token',null); store.set('tw_login',null); location.reload(); };
   acts.append(b1,b2); sh.appendChild(acts);
-  sh.appendChild(langPicker());
- 
   sh.appendChild(pipButton());
   sh.appendChild(aboutButton());
   if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Kekii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
+  sh.appendChild(langPicker());
   sh.appendChild(legalNote());
 };
 $('loginBtn').onclick = () => {
