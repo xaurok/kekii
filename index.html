@@ -627,6 +627,7 @@ const EN = {
  'Twitch pide tener el teléfono verificado en tu cuenta para enviar susurros.':'Twitch requires a verified phone number on your account to send whispers.',
  'Has enviado demasiados susurros. Espera un poco.':"You've sent too many whispers. Wait a bit.",'Este usuario no acepta tus susurros.':"This user doesn't accept your whispers.",
  'Vuelve a iniciar sesión para poder enviar susurros.':'Log in again to send whispers.','No se pudo enviar el susurro.':"Couldn't send the whisper.",'Enviar susurro ':'Send whisper',
+ 'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
  'Entra en un canal para cargar sus emotes':'Join a channel to load its emotes','Los emotes que uses aparecerán aquí.':'Emotes you use will show up here.',
  'Inicia sesión para ver tus emotes de Twitch.':'Log in to see your Twitch emotes.','Vuelve a iniciar sesión para ver también tus emotes de suscripción de Twitch.':'Log in again to also see your Twitch subscription emotes.',
@@ -837,11 +838,33 @@ function add7tv(list, src){
   for(const e of list||[]){
     const d = e.data; if(!d||!d.host) continue;
     const f = d.host.files.find(x=>x.name==='2x.webp') || d.host.files[0];
-    if(src==='global' && emotes7.get(e.name)?.src==='canal') continue;
-    emotes7.set(e.name,{url:'https:'+d.host.url+'/'+f.name, zw: (e.flags&1)||(d.flags&256), src});
+    putEmote(e.name, 'https:'+d.host.url+'/'+f.name, (e.flags&1)||(d.flags&256), src);
   }
   renderPicker();
   refreshEmotesInChat();
+}
+// Si un emote existe en varios sitios, gana el del canal antes que el global (y 7TV > BTTV > FFZ)
+const EM_PRIO={'canal':6,'bttv-canal':5,'ffz-canal':4,'global':3,'bttv-global':2,'ffz-global':1};
+function putEmote(name, url, zw, src){
+  const ex=emotes7.get(name); if(ex && (EM_PRIO[ex.src]||0) > EM_PRIO[src]) return;
+  emotes7.set(name,{url, zw:!!zw, src});
+}
+// ---------- Emotes de BTTV y FFZ ----------
+const BTTV_ZW=new Set(['SoSnowy','IceCold','SantaHat','TopHat','ReinDeer','CandyCane','cvMask','cvHazmat']);
+const bttvUrl=id=>'https://cdn.betterttv.net/emote/'+id+'/2x.webp';
+function ffzUrl(e){ const u=(e.animated && (e.animated['2']||e.animated['1'])) || e.urls['2'] || e.urls['1']; return u.startsWith('http') ? u : 'https:'+u; }
+function ffzAdd(set, src){ ((set && set.emoticons) || []).forEach(e=>{ try{ putEmote(e.name, ffzUrl(e), false, src); }catch(x){} }); }
+async function loadGlobalBttvFfz(){
+  try{ const r=await fetch('https://api.betterttv.net/3/cached/emotes/global'); if(r.ok) (await r.json()).forEach(e=>putEmote(e.code, bttvUrl(e.id), BTTV_ZW.has(e.code), 'bttv-global')); }catch(e){}
+  try{ const r=await fetch('https://api.frankerfacez.com/v1/set/global'); if(r.ok){ const j=await r.json(); (j.default_sets||[]).forEach(id=>ffzAdd(j.sets && j.sets[id], 'ffz-global')); } }catch(e){}
+  renderPicker(); refreshEmotesInChat();
+}
+async function loadChannelBttvFfz(rid){
+  try{ const r=await fetch('https://api.betterttv.net/3/cached/users/twitch/'+rid);
+    if(r.ok && rid===roomId){ const j=await r.json(); [...(j.channelEmotes||[]), ...(j.sharedEmotes||[])].forEach(e=>putEmote(e.code, bttvUrl(e.id), false, 'bttv-canal')); } }catch(e){}
+  try{ const r=await fetch('https://api.frankerfacez.com/v1/room/id/'+rid);
+    if(r.ok && rid===roomId){ const j=await r.json(); Object.values(j.sets||{}).forEach(set=>ffzAdd(set, 'ffz-canal')); } }catch(e){}
+  renderPicker(); refreshEmotesInChat();
 }
 // Los mensajes pintados antes de que llegaran los emotes de 7TV (p. ej. el historial) se vuelven a pintar
 function refreshEmotesInChat(){
@@ -1000,10 +1023,12 @@ function emTabDefs(recent, by){
   const chIcon = chan && chan.user ? chan.user.profile_image_url : null;
   const firstOf = l=>l.length ? l[0][1].url : null;
   const tc=by('tw-canal'), sc=by('canal'), to=by('tw-otros'), sg=by('global'), tg=by('tw-global');
+  const bc=by('bttv-canal'), fc=by('ffz-canal'), bg=by('bttv-global'), fg=by('ffz-global');
   return [
     {k:'recent', label:'Recientes', count:recent.length, sections:[['',recent]]},
-    {k:'channel', label:'Canal', icon:chIcon, count:tc.length+sc.length, sections:[['Twitch',tc],['7TV',sc]]},
+    {k:'channel', label:'Canal', icon:chIcon, count:tc.length+sc.length+bc.length+fc.length, sections:[['Twitch',tc],['7TV',sc],['BTTV',bc],['FFZ',fc]]},
     {k:'7tv', label:'7TV', icon:firstOf(sg), count:sc.length+sg.length, sections:[['Del canal',sc],['Globales',sg]]},
+    {k:'bttv', label:'BTTV · FFZ', icon:firstOf(bg.length?bg:fg), count:bc.length+fc.length+bg.length+fg.length, sections:[['BTTV del canal',bc],['FFZ del canal',fc],['BTTV globales',bg],['FFZ globales',fg]]},
     {k:'subs', label:'Mis subs', icon:firstOf(to), count:to.length, sections:[['',to]]},
     {k:'twitch', label:'Twitch', icon:firstOf(tg), count:tg.length, sections:[['',tg]]},
   ];
@@ -1156,7 +1181,7 @@ function parseEmotes(tag){
 }
 function connect(){
   if(ws) { ws.onclose=null; ws.close(); }
-  emotes7.clear(); loadGlobal7tv();
+  emotes7.clear(); loadGlobal7tv(); loadGlobalBttvFfz();
   ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
   ws.onopen = ()=>{
     ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
@@ -1170,7 +1195,7 @@ function connect(){
     const m = parse(l);
     switch(m.cmd){
       case 'PING': ws.send('PONG :'+m.trailing); break;
-      case 'ROOMSTATE': if(m.tags['room-id'] && !ws.loaded7){ ws.loaded7=true; roomId=m.tags['room-id']; loadChannel7tv(roomId); loadTwitchEmotes(); loadBadges(); loadCheermotes(); } break;
+      case 'ROOMSTATE': if(m.tags['room-id'] && !ws.loaded7){ ws.loaded7=true; roomId=m.tags['room-id']; loadChannel7tv(roomId); loadChannelBttvFfz(roomId); loadTwitchEmotes(); loadBadges(); loadCheermotes(); } break;
       case 'PRIVMSG': showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes),
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
       case 'USERNOTICE': showNotice(m); break;
