@@ -759,6 +759,7 @@ function langPicker(){
 }
 
 const $ = id => document.getElementById(id);
+const TEST_SIMPLE = /[?&]prueba=simple\b/.test(location.search); // modo prueba del reproductor básico
 const store = {
   get(k){try{return localStorage.getItem(k)}catch(e){return null}},
   set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
@@ -2074,6 +2075,12 @@ function createPlayer(c){
   // cambiar de tamaño). Al empezar, si va por detrás, saltamos solos al momento actual.
   const slot=$('playerSlot'); slot.innerHTML=''; tPlayer=null;
   const createdAt=Date.now(); let firstPlay=true;
+  // Prueba: con ?prueba=simple en la dirección se usa el reproductor básico de Twitch (sin su API)
+  if(TEST_SIMPLE){
+    const f=document.createElement('iframe'); f.setAttribute('allowfullscreen',''); f.setAttribute('allow','autoplay; fullscreen; picture-in-picture');
+    f.src='https://player.twitch.tv/?channel='+encodeURIComponent(c)+'&parent='+location.hostname+'&autoplay=false&muted=false';
+    slot.appendChild(f); sys('Modo prueba: reproductor básico.'); return;
+  }
   // Consejo de la ventana flotante: al empezar a reproducir o, si el reproductor no avisa, a los 20 s de abrir el canal
   let tipped=false; const tip=()=>{ if(tipped || c!==channel) return; tipped=true; maybeShowPipTip(); };
   setTimeout(tip, 20000);
