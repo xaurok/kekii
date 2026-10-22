@@ -3,15 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Kekii · Twitch en el móvil con emotes de 7TV</title>
-<meta name="description" content="Kekii: mira directos de Twitch y chatea con emotes de 7TV, BTTV y FFZ desde el móvil. Gratis, sin anuncios propios y sin instalar nada de la tienda.">
+<title>Kekii · 7TV en Android y iPhone: Twitch con emotes en el móvil</title>
+<meta name="description" content="Ve los emotes de 7TV, BTTV y FFZ en Android y iPhone. Kekii es una app gratis para ver directos de Twitch y chatear con emotes desde el móvil, sin descargar nada de la tienda.">
+<link rel="canonical" href="https://kekii.app/info.html">
 <meta name="theme-color" content="#0a0a0b">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Kekii", "url": "https://kekii.app/", "description": "App gratis para ver directos de Twitch y chatear con emotes de 7TV, BTTV y FFZ en el móvil.", "applicationCategory": "EntertainmentApplication", "operatingSystem": "Android, iOS, Windows, macOS", "browserRequirements": "Requiere un navegador moderno", "inLanguage": ["es", "en"], "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "image": "https://kekii.app/icon-512.png"}</script>
 <meta property="og:title" content="Kekii">
-<meta property="og:description" content="Twitch en el móvil con emotes de 7TV">
-<meta property="og:image" content="icon-512.png">
+<meta property="og:description" content="Twitch en el móvil con emotes de 7TV, BTTV y FFZ. Gratis, en Android, iPhone y ordenador.">
+<meta property="og:url" content="https://kekii.app/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://kekii.app/icon-512.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
 :root{--bg:#0a0a0b;--panel:#141416;--fg:#ececee;--muted:#8e8e96;--line:#26262b;--accent:#2fd1a9;--display:"Bricolage Grotesque",system-ui,sans-serif;color-scheme:dark}
@@ -51,6 +55,15 @@ h1 em{font-style:normal;color:var(--accent)}
 .feat p{margin:0;color:#b9b9c1;font-size:15px}
 .feat .ic{font-size:22px;display:block;margin-bottom:8px}
 
+.faq{padding:46px 0 0;max-width:760px}
+.faq h2{font:800 30px/1.15 var(--display);margin:0 0 14px}
+.faq details{border-top:1px solid var(--line);padding:4px 0}
+.faq details:last-of-type{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer;font-weight:700;font-size:17px;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--accent);font-size:22px;line-height:1}
+.faq details[open] summary::after{content:"−"}
+.faq p{margin:0 0 16px;color:#b9b9c1}
 footer{margin-top:50px;border-top:1px solid var(--line);padding:22px 0 calc(30px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
 footer a{color:var(--accent)}
 .kMark{height:.79em;width:auto;vertical-align:-.03em;margin-right:.03em}
@@ -65,8 +78,8 @@ footer a{color:var(--accent)}
 
 <main class="wrap">
   <section class="hero">
-    <h1 data-es="Twitch en el móvil con emotes de <em>7TV</em>" data-en="Watch Twitch on mobile with <em>7TV</em> emotes"></h1>
-    <p class="lead" data-es="Mira directos, chatea y usa tus emotes favoritos. Gratis, sin anuncios propios y sin pasar por ninguna tienda." data-en="Watch streams, chat and use your favourite emotes. Free, no ads of our own and no app store needed."></p>
+    <h1 data-es="Twitch en el móvil con emotes de <em>7TV</em>" data-en="Watch Twitch on mobile with <em>7TV</em> emotes">Twitch en el móvil con emotes de <em>7TV</em></h1>
+    <p class="lead" data-es="Mira directos, chatea y usa tus emotes favoritos. Gratis, sin anuncios propios y sin pasar por ninguna tienda." data-en="Watch streams, chat and use your favourite emotes. Free, no ads of our own and no app store needed.">Mira directos, chatea y usa tus emotes favoritos. Gratis, sin anuncios propios y sin pasar por ninguna tienda.</p>
     <div class="ctas">
       <a class="btn primary" href="./?app" data-es="Abrir Kekii" data-en="Open Kekii"></a>
       <button class="btn ghost" id="installBtn" type="button" data-es="Instalar app" data-en="Install app"></button>
@@ -75,6 +88,14 @@ footer a{color:var(--accent)}
   </section>
 
   <section class="feats" id="feats"></section>
+  <section class="faq" aria-labelledby="faqT">
+    <h2 id="faqT" data-es="Preguntas frecuentes" data-en="Frequently asked questions">Preguntas frecuentes</h2>
+    <details><summary data-es="¿Se pueden ver los emotes de 7TV en Android?" data-en="Can I see 7TV emotes on Android?">¿Se pueden ver los emotes de 7TV en Android?</summary><p data-es="Sí. Los emotes de 7TV normalmente se ven con la extensión del navegador del ordenador. Con Kekii los ves en el chat de Twitch desde Android, junto a los de BTTV y FFZ, sin instalar extensiones: abre kekii.app en Chrome." data-en="Yes. 7TV emotes usually need the desktop browser extension. With Kekii you see them in Twitch chat on Android, along with BTTV and FFZ emotes, with no extensions: open kekii.app in Chrome.">Sí. Los emotes de 7TV normalmente se ven con la extensión del navegador del ordenador. Con Kekii los ves en el chat de Twitch desde Android, junto a los de BTTV y FFZ, sin instalar extensiones: abre kekii.app en Chrome.</p></details>
+    <details><summary data-es="¿Y en iPhone?" data-en="What about iPhone?">¿Y en iPhone?</summary><p data-es="También. Abre kekii.app en Safari y, si quieres, añádela a la pantalla de inicio para usarla como una app." data-en="Also. Open kekii.app in Safari and, if you like, add it to your home screen to use it like an app.">También. Abre kekii.app en Safari y, si quieres, añádela a la pantalla de inicio para usarla como una app.</p></details>
+    <details><summary data-es="¿Tengo que descargar algo?" data-en="Do I need to download anything?">¿Tengo que descargar algo?</summary><p data-es="No. Funciona desde el navegador. Si quieres, se instala como app en dos toques, sin pasar por Play Store ni App Store." data-en="No. It works in the browser. If you want, you can install it as an app in two taps, without going through Play Store or App Store.">No. Funciona desde el navegador. Si quieres, se instala como app en dos toques, sin pasar por Play Store ni App Store.</p></details>
+    <details><summary data-es="¿Puedo escribir en el chat con emotes?" data-en="Can I chat with emotes?">¿Puedo escribir en el chat con emotes?</summary><p data-es="Sí. Inicia sesión con tu cuenta de Twitch en la página oficial de Twitch y usa el selector de emotes para escribir con los de 7TV, BTTV, FFZ y los tuyos de Twitch." data-en="Yes. Sign in with your Twitch account on Twitch’s official page and use the emote picker to chat with 7TV, BTTV, FFZ and your own Twitch emotes.">Sí. Inicia sesión con tu cuenta de Twitch en la página oficial de Twitch y usa el selector de emotes para escribir con los de 7TV, BTTV, FFZ y los tuyos de Twitch.</p></details>
+    <details><summary data-es="¿Es gratis? ¿Es oficial?" data-en="Is it free? Is it official?">¿Es gratis? ¿Es oficial?</summary><p data-es="Es gratis. Es una app no oficial: no está relacionada con Twitch, 7TV, BTTV ni FFZ." data-en="It’s free. It’s an unofficial app, not related to Twitch, 7TV, BTTV or FFZ.">Es gratis. Es una app no oficial: no está relacionada con Twitch, 7TV, BTTV ni FFZ.</p></details>
+  </section>
 </main>
 
 <footer><div class="wrap">
@@ -101,7 +122,7 @@ const $=id=>document.getElementById(id);
 function render(){
   document.documentElement.lang=LANG;
   document.querySelectorAll('[data-es]').forEach(el=>{ el.innerHTML=el.dataset[LANG]; });
-  document.title = LANG==='es' ? 'Kekii · Twitch en el móvil con emotes de 7TV' : 'Kekii · Twitch on mobile with 7TV emotes';
+  document.title = LANG==='es' ? 'Kekii · 7TV en Android y iPhone: Twitch con emotes en el móvil' : 'Kekii · 7TV on Android and iPhone: Twitch with emotes on mobile';
   $('langBtn').textContent = LANG==='es' ? 'English' : 'Español';
   $('privLink').href = LANG==='es' ? 'privacidad.html' : 'privacy.html';
 
