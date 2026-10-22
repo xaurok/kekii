@@ -2376,10 +2376,16 @@ async function loadProfileTab(content){
       vids.forEach(v=>{
         const b=document.createElement('button'); b.type='button'; b.className='vodCard';
         const th=document.createElement('div'); th.className='clipThumb';
-        const im=document.createElement('img'); im.loading='lazy'; im.alt=''; im.src=(v.thumbnail_url||'').replace('%{width}','480').replace('%{height}','270');
+        // El vídeo del directo en curso no tiene miniatura todavía: usamos la imagen en directo del canal
+        const ongoing = v.type==='archive' && (!v.thumbnail_url || /404_processing/.test(v.thumbnail_url));
+        const im=document.createElement('img'); im.loading='lazy'; im.alt='';
+        im.onerror=()=>{ im.style.visibility='hidden'; };
+        im.src = ongoing ? 'https://static-cdn.jtvnw.net/previews-ttv/live_user_'+encodeURIComponent(u.login)+'-480x270.jpg?t='+Math.floor(Date.now()/60000)
+                         : (v.thumbnail_url||'').replace('%{width}','480').replace('%{height}','270');
         const du=document.createElement('span'); du.className='clipDur'; du.textContent=parseDur(v.duration);
         const vw=document.createElement('span'); vw.className='clipViews'; vw.textContent=fmtK(v.view_count)+' visualizaciones';
         th.append(im,du,vw);
+        if(ongoing){ const lb=document.createElement('span'); lb.className='badgeLive'; lb.textContent=T('En directo'); th.appendChild(lb); }
         const t=document.createElement('div'); t.className='clipTitle'; t.textContent=v.title;
         const m=document.createElement('div'); m.className='clipMeta'; m.textContent=clipAgo(v.created_at)+({highlight:' · Destacado', upload:' · Subido'}[v.type]||'');
         b.append(th,t,m); b.onclick=()=>openVod(v); g.appendChild(b);
