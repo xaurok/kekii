@@ -468,6 +468,11 @@ body:not(.watching) #pipBanner{display:none}
 /* ---------- Acerca de / aviso legal ---------- */
 .sleepRow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
 .sleepRow .chip{flex:1 0 28%;padding:12px 0;font-size:15px;font-weight:700}
+.chatterSearch{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--fg);font:inherit;margin-bottom:8px}
+.chatterList{display:flex;flex-direction:column}
+.chatterRow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 2px;color:var(--fg);font:inherit;cursor:pointer}
+.chatterRow .cn{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatterRow .cm{color:var(--muted);font-size:13px;flex:none}
 .aboutLink{display:block;width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700;text-align:center}
 .legalNote{font-size:12px;color:var(--muted);text-align:center;margin:14px 0 2px;line-height:1.4}
 .legalNote a{color:var(--muted)}
@@ -533,6 +538,7 @@ main.snap{transition:transform .22s ease-out}
       <button id="chanTxt" type="button" aria-label="Ver perfil del canal"><span id="chanName"></span><span id="status">Escribe un canal y pulsa Ver</span></button>
       <button class="iconBtn" id="liveBtn" type="button" aria-label="Ir al momento actual del directo" title="Ir al directo"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6v12l8-6zM12 6v12l8-6z"/><rect x="20" y="6" width="2" height="12"/></svg><span id="liveLag"></span></button>
       <button class="iconBtn" id="chanToggle" type="button" aria-label="Mostrar u ocultar título y etiquetas" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button class="iconBtn" id="chattersBtn" type="button" aria-label="Usuarios del chat" title="Usuarios del chat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.2c2.4.1 4.4 1.7 5 4.8"/></svg></button>
       <button class="iconBtn actBtn" type="button" aria-label="Actividad"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></svg><span class="actBadge" hidden></span></button>
       <button class="iconBtn" id="homeBtn" type="button" aria-label="Inicio"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></button>
       <button class="iconBtn" id="searchToggle" type="button" aria-label="Buscar canal"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
@@ -635,6 +641,7 @@ const EN = {
  'Has enviado demasiados susurros. Espera un poco.':"You've sent too many whispers. Wait a bit.",'Este usuario no acepta tus susurros.':"This user doesn't accept your whispers.",
  'Vuelve a iniciar sesión para poder enviar susurros.':'Log in again to send whispers.','No se pudo enviar el susurro.':"Couldn't send the whisper.",'Enviar susurro ':'Send whisper',
  'Temporizador de apagado':'Sleep timer','Temporizador: el directo se ha parado.':'Sleep timer: the stream has been stopped.','El directo se parará en':'The stream will stop in','Elige cuándo quieres que se pare el directo. Funciona también en la ventana flotante.':'Choose when the stream should stop. It also works in the floating window.','Desactivar temporizador':'Turn off timer','Temporizador desactivado':'Timer turned off',
+ 'Usuarios del chat':'Chat users','Personas que han escrito en el chat desde que entraste (incluidos los mensajes anteriores).':'People who have written in chat since you joined (including earlier messages).','Buscar usuario':'Search user','En el chat':'In chat','Nadie con ese nombre ha escrito todavía.':'Nobody with that name has written yet.','Todavía no ha escrito nadie.':'Nobody has written yet.','mensaje':'message','mensajes':'messages',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
  'Entra en un canal para cargar sus emotes':'Join a channel to load its emotes','Los emotes que uses aparecerán aquí.':'Emotes you use will show up here.',
@@ -1159,7 +1166,7 @@ function showMsg(name,color,text,twEmotes,meta={}){
   if(meta.id){ if(seenMsg.has(meta.id)) return; seenMsg.add(meta.id); if(seenMsg.size>4000){ const it=seenMsg.values(); for(let i=0;i<1000;i++) seenMsg.delete(it.next().value); } }
   const d=document.createElement('div'); d.className='msg';
   const userLogin = (meta.login || name).toLowerCase();
-  if(!meta.old || !chatters.has(userLogin)) noteChatter(userLogin, name, color);
+  noteChatter(userLogin, name, color, meta.t);
   if(meta.parentName){ const r=document.createElement('span'); r.className='replyTo'; r.textContent='Respondiendo a @'+meta.parentName+': '+(meta.parentBody||''); d.appendChild(r); }
   const msgData={text, emotes:twEmotes, t:meta.t||Date.now()};
   if(meta.histStore){ const a=meta.histStore.get(userLogin)||[]; a.push(msgData); meta.histStore.set(userLogin,a); } else recordMsg(userLogin, msgData);
@@ -2154,6 +2161,7 @@ function stopStream(){
   const wrap=$('playerWrap'); wrap.style.left=wrap.style.top=wrap.style.right=wrap.style.bottom='';
 }
 $('miniClose').addEventListener('click', e=>{ e.stopPropagation(); stopStream(); });
+$('chattersBtn').addEventListener('click', e=>{ e.stopPropagation(); openChatters(); });
 // Tocar para ampliar; arrastrar para moverlo de sitio (sin capas encima del vídeo)
 (()=>{
   const wrap=$('playerWrap'); let sx=0, sy=0, ox=0, oy=0, moved=false, down=false;
@@ -2574,7 +2582,36 @@ setInterval(()=>{
 
 // ---------- Sugerencias al escribir @ en el chat ----------
 const chatters = new Map(); // login -> {name, color, last}
-function noteChatter(login, name, color){ if(!login) return; chatters.set(login, {name:name||login, color, last:Date.now()}); }
+function noteChatter(login, name, color, t){ if(!login) return;
+  const prev=chatters.get(login), when=t||Date.now();
+  chatters.set(login, {name:name||login, color: color||(prev&&prev.color), last: Math.max(when, prev?prev.last:0), n:(prev?prev.n||0:0)+1});
+}
+// ---------- Usuarios del chat (quién ha escrito desde que entraste) ----------
+function openChatters(){
+  closeSheet();
+  const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
+  const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
+  const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; sh.appendChild(h);
+  const note=document.createElement('p'); note.className='instNote'; note.style.textAlign='left'; note.style.margin='2px 0 10px';
+  note.textContent=T('Personas que han escrito en el chat desde que entraste (incluidos los mensajes anteriores).'); sh.appendChild(note);
+  const q=document.createElement('input'); q.type='search'; q.className='chatterSearch'; q.placeholder=T('Buscar usuario'); q.autocapitalize='off'; q.spellcheck=false; sh.appendChild(q);
+  const list=document.createElement('div'); list.className='chatterList'; sh.appendChild(list);
+  const draw=()=>{
+    const f=q.value.trim().toLowerCase().replace(/^@/,'');
+    const all=[...chatters.entries()].sort((a,b)=>b[1].last-a[1].last);
+    h.textContent=T('En el chat')+' · '+all.length;
+    const rows=all.filter(([l,c])=>!f || l.includes(f) || (c.name||'').toLowerCase().includes(f)).slice(0,300);
+    list.textContent='';
+    if(!rows.length){ const e=document.createElement('p'); e.className='emNone'; e.textContent = all.length ? T('Nadie con ese nombre ha escrito todavía.') : T('Todavía no ha escrito nadie.'); list.appendChild(e); return; }
+    rows.forEach(([l,c])=>{
+      const b=document.createElement('button'); b.type='button'; b.className='chatterRow';
+      const n=document.createElement('span'); n.className='cn'; n.style.color=colorFor(c.name,c.color); n.textContent=c.name;
+      const m=document.createElement('span'); m.className='cm'; m.textContent=(c.n||1)+' '+T((c.n||1)===1?'mensaje':'mensajes')+' · '+fmtStamp(c.last);
+      b.append(n,m); b.onclick=()=>openSheet({login:l, name:c.name, color:c.color}); list.appendChild(b);
+    });
+  };
+  q.oninput=draw; draw();
+}
 function mentionQuery(){
   const t=$('text'); const pos=t.selectionStart ?? t.value.length;
   const m=/(^|\s)@([\w]*)$/.exec(t.value.slice(0,pos));
