@@ -4,11 +4,13 @@
 <meta charset="utf-8">
 <title>Kekii</title>
 <script>
-  // GitHub Pages sirve este archivo para enlaces como /kekii/ibai.
-  // Redirige a /kekii/?c=ibai y la app vuelve a poner el enlace bonito.
+  // GitHub Pages sirve este archivo para enlaces como kekii.app/ibai.
+  // Redirige a kekii.app/?c=ibai y la app vuelve a poner el enlace bonito.
+  // Con dominio propio (kekii.app/ibai) la app está en la raíz; en github.io va dentro de /kekii/.
   var parts = location.pathname.split('/').filter(Boolean);
-  var base = '/' + (parts.length ? parts[0] + '/' : '');
-  var channel = parts.slice(1).join('/').replace(/[^a-zA-Z0-9_]/g, '');
+  var sub = /\.github\.io$/.test(location.hostname) && parts.length;
+  var base = sub ? '/' + parts[0] + '/' : '/';
+  var channel = (sub ? parts.slice(1) : parts).join('/').replace(/[^a-zA-Z0-9_]/g, '');
   location.replace(base + (channel ? '?c=' + channel : ''));
 </script>
 </head>
