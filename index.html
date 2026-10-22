@@ -2079,7 +2079,7 @@ function createPlayer(c){
   if(TEST_SIMPLE){
     const f=document.createElement('iframe'); f.setAttribute('allowfullscreen',''); f.setAttribute('allow','autoplay; fullscreen; picture-in-picture');
     f.src='https://player.twitch.tv/?channel='+encodeURIComponent(c)+'&parent='+location.hostname+'&autoplay=false&muted=false';
-    slot.appendChild(f); sys('Modo prueba: reproductor básico.'); return;
+    slot.appendChild(f); setTimeout(()=>sys('Modo prueba: reproductor básico.'), 400); return;
   }
   // Consejo de la ventana flotante: al empezar a reproducir o, si el reproductor no avisa, a los 20 s de abrir el canal
   let tipped=false; const tip=()=>{ if(tipped || c!==channel) return; tipped=true; maybeShowPipTip(); };
