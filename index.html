@@ -1152,7 +1152,11 @@ function renderText(container, text, twEmotes, cheer){
     }
   }
 }
+// Mensajes ya mostrados (por su id) para no repetirlos al juntar historial y directo o al reconectar
+const seenMsg = new Set();
+let recentFor = '';
 function showMsg(name,color,text,twEmotes,meta={}){
+  if(meta.id){ if(seenMsg.has(meta.id)) return; seenMsg.add(meta.id); if(seenMsg.size>4000){ const it=seenMsg.values(); for(let i=0;i<1000;i++) seenMsg.delete(it.next().value); } }
   const d=document.createElement('div'); d.className='msg';
   const userLogin = (meta.login || name).toLowerCase();
   if(!meta.old || !chatters.has(userLogin)) noteChatter(userLogin, name, color);
@@ -1200,7 +1204,8 @@ function connect(){
     ws.send('PASS ' + (token ? 'oauth:'+token : 'SCHMOOPIIE'));
     ws.send('NICK ' + (token && login ? login : 'justinfan'+Math.floor(Math.random()*90000+10000)));
     ws.send('JOIN #'+channel);
-    if(!ws.recentLoaded){ ws.recentLoaded=true; loadRecentMessages(channel); }
+    // El historial solo se carga al entrar en el canal, no en cada reconexión
+    if(recentFor!==channel){ recentFor=channel; loadRecentMessages(channel); }
     if(!chan.user) $('status').textContent = 'Conectado al chat'; else renderChanBar();
   };
   ws.onmessage = ev => ev.data.split('\r\n').filter(Boolean).forEach(l=>{
@@ -1216,7 +1221,8 @@ function connect(){
       case 'NOTICE': sys(m.trailing); break;
     }
   });
-  ws.onclose = ()=>{ $('status').textContent='Desconectado, reconectando…'; setTimeout(()=>channel&&connect(),3000); };
+  const thisWs=ws;
+  ws.onclose = ()=>{ if(thisWs!==ws) return; $('status').textContent='Desconectado, reconectando…'; setTimeout(()=>{ if(channel && thisWs===ws) connect(); },3000); };
 }
 
 // ---------- Player + start ----------
@@ -1231,7 +1237,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  chatEl.textContent=''; userHist.clear(); try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  chatEl.textContent=''; userHist.clear(); seenMsg.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
