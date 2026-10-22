@@ -541,7 +541,7 @@ main.snap{transition:transform .22s ease-out}
     <div id="mentionBar" hidden></div>
     <div id="replyBar" hidden><span></span><button type="button" class="iconBtn" id="replyCancel" aria-label="Cancelar respuesta">✕</button></div>
     <form id="send">
-      <button type="button" id="emBtn" title="Emotes 7TV">☺</button>
+      <button type="button" id="emBtn" title="Emotes">☺</button>
       <button type="button" id="pointsBtn" title="Puntos de canal y Bits" aria-label="Puntos de canal y Bits"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4 10l8 11 8-11z"/><path d="M4 10h16M12 3l-3 7 3 11 3-11z"/></svg></button>
       <input id="text" placeholder="Inicia sesión para escribir" autocomplete="off" disabled>
       <button class="primary" id="sendBtn" disabled>Enviar</button>
@@ -639,11 +639,11 @@ const EN = {
  'Instalar Kekii como app':'Install Kekii as an app','Instala Kekii en tu móvil':'Install Kekii on your phone','Se abre como una app, a pantalla completa y con su propio icono.':'It opens like an app, full screen and with its own icon.',
  'Instalar ahora':'Install now','Ahora no':'Not now','También puedes seguir usándola desde el navegador sin instalar nada.':'You can also keep using it in the browser without installing anything.','Kekii instalada':'Kekii installed',
  'Acerca de Kekii':'About Kekii','Directos, chat y emotes':'Streams, chat and emotes','Política de privacidad':'Privacy policy',
- 'Kekii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc.':'Kekii is an unofficial app. It is not affiliated with, sponsored or endorsed by Twitch Interactive, Inc. or 7TV. Twitch is a trademark of Twitch Interactive, Inc.',
+ 'Kekii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV, BetterTTV ni FrankerFaceZ. Twitch es una marca de Twitch Interactive, Inc.':'Kekii is an unofficial app. It is not affiliated with, sponsored or endorsed by Twitch Interactive, Inc., 7TV, BetterTTV or FrankerFaceZ. Twitch is a trademark of Twitch Interactive, Inc.',
  'No tiene servidores propios: tus datos se guardan solo en tu dispositivo.':'It has no servers of its own: your data stays on your device.',
  'Nunca ve tu contraseña: inicias sesión en la página oficial de Twitch.':'It never sees your password: you log in on the official Twitch page.',
  'Sin anuncios propios ni seguimiento.':'No ads of its own and no tracking.','Idioma':'Language',
- 'Kekii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>':'Kekii is an unofficial app, not related to Twitch or 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacy</a>',
+ 'Kekii es una app no oficial, sin relación con Twitch, 7TV, BTTV ni FFZ. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>':'Kekii is an unofficial app, not related to Twitch, 7TV, BTTV or FFZ. · <a href="privacidad.html" target="_blank" rel="noopener">Privacy</a>',
  'Ábrela en <b>Safari</b> (en otros navegadores de iPhone no se puede instalar).':'Open it in <b>Safari</b> (other iPhone browsers can\'t install it).',
  'Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> de la barra de abajo.':'Tap the <b>Share</b> <span class="kbd">⬆︎</span> button in the bottom bar.',
  'Baja y elige <b>Añadir a pantalla de inicio</b>, y luego <b>Añadir</b>.':'Scroll down, choose <b>Add to Home Screen</b>, then <b>Add</b>.',
@@ -2601,7 +2601,7 @@ $('text').addEventListener('keydown', e=>{
 
 // ---------- Acerca de Kekii (aviso de app no oficial y privacidad) ----------
 function legalNote(){ const n=document.createElement('p'); n.className='legalNote';
-  n.innerHTML=T('Kekii es una app no oficial, sin relación con Twitch ni con 7TV. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>').replace('privacidad.html', PRIVACY_URL); return n; }
+  n.innerHTML=T('Kekii es una app no oficial, sin relación con Twitch, 7TV, BTTV ni FFZ. · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>').replace('privacidad.html', PRIVACY_URL); return n; }
 
 // ---------- Guía: seguir viendo fuera de la app (ventana flotante / PiP) ----------
 function openPipGuide(){
@@ -2697,7 +2697,7 @@ function openAbout(){
   const sub=document.createElement('div'); sub.className='pd'; sub.textContent='Directos, chat y emotes';
   t.append(h,sub); head.append(ic,t); sh.appendChild(head);
   const p=document.createElement('p'); p.className='bio';
-  p.textContent=T('Kekii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc.');
+  p.textContent=T('Kekii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV, BetterTTV ni FrankerFaceZ. Twitch es una marca de Twitch Interactive, Inc.');
   sh.appendChild(p);
   const ul=document.createElement('ul'); ul.className='aboutList';
   ['No tiene servidores propios: tus datos se guardan solo en tu dispositivo.','Nunca ve tu contraseña: inicias sesión en la página oficial de Twitch.','Sin anuncios propios ni seguimiento.'].forEach(x=>{ const li=document.createElement('li'); li.textContent=x; ul.appendChild(li); });
