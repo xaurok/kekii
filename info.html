@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Mojii · Twitch en el móvil con emotes de 7TV</title>
-<meta name="description" content="Mojii: mira directos de Twitch y chatea con emotes de 7TV desde el móvil. Gratis, sin anuncios propios y sin instalar nada de la tienda.">
+<title>Kekii · Twitch en el móvil con emotes de 7TV</title>
+<meta name="description" content="Kekii: mira directos de Twitch y chatea con emotes de 7TV desde el móvil. Gratis, sin anuncios propios y sin instalar nada de la tienda.">
 <meta name="theme-color" content="#0a0a0b">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
-<meta property="og:title" content="Mojii">
+<meta property="og:title" content="Kekii">
 <meta property="og:description" content="Twitch en el móvil con emotes de 7TV">
 <meta property="og:image" content="icon-512.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
@@ -55,7 +55,7 @@ footer a{color:var(--accent)}
 </head>
 <body>
 <header><div class="wrap">
-  <a class="logo" href="./?app">Moj<b>ii</b></a>
+  <a class="logo" href="./?app">Kek<b>ii</b></a>
   <span class="sp"></span>
   <button class="lang" id="langBtn" type="button">English</button>
 </div></header>
@@ -65,7 +65,7 @@ footer a{color:var(--accent)}
     <h1 data-es="Twitch en el móvil con emotes de <em>7TV</em>" data-en="Watch Twitch on mobile with <em>7TV</em> emotes"></h1>
     <p class="lead" data-es="Mira directos, chatea y usa tus emotes favoritos. Gratis, sin anuncios propios y sin pasar por ninguna tienda." data-en="Watch streams, chat and use your favourite emotes. Free, no ads of our own and no app store needed."></p>
     <div class="ctas">
-      <a class="btn primary" href="./?app" data-es="Abrir Mojii" data-en="Open Mojii"></a>
+      <a class="btn primary" href="./?app" data-es="Abrir Kekii" data-en="Open Kekii"></a>
       <button class="btn ghost" id="installBtn" type="button" data-es="Instalar app" data-en="Install app"></button>
     </div>
     <p class="small" id="installHelp" hidden></p>
@@ -75,7 +75,7 @@ footer a{color:var(--accent)}
 </main>
 
 <footer><div class="wrap">
-  <p data-es="Mojii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc." data-en="Mojii is an unofficial app. It is not affiliated with, sponsored or endorsed by Twitch Interactive, Inc. or 7TV. Twitch is a trademark of Twitch Interactive, Inc."></p>
+  <p data-es="Kekii es una app no oficial. No está afiliada, patrocinada ni respaldada por Twitch Interactive, Inc. ni por 7TV. Twitch es una marca de Twitch Interactive, Inc." data-en="Kekii is an unofficial app. It is not affiliated with, sponsored or endorsed by Twitch Interactive, Inc. or 7TV. Twitch is a trademark of Twitch Interactive, Inc."></p>
   <p><a id="privLink" href="privacidad.html" data-es="Política de privacidad" data-en="Privacy policy"></a></p>
 </div></footer>
 
@@ -95,7 +95,7 @@ const $=id=>document.getElementById(id);
 function render(){
   document.documentElement.lang=LANG;
   document.querySelectorAll('[data-es]').forEach(el=>{ el.innerHTML=el.dataset[LANG]; });
-  document.title = LANG==='es' ? 'Mojii · Twitch en el móvil con emotes de 7TV' : 'Mojii · Twitch on mobile with 7TV emotes';
+  document.title = LANG==='es' ? 'Kekii · Twitch en el móvil con emotes de 7TV' : 'Kekii · Twitch on mobile with 7TV emotes';
   $('langBtn').textContent = LANG==='es' ? 'English' : 'Español';
   $('privLink').href = LANG==='es' ? 'privacidad.html' : 'privacy.html';
 
