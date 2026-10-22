@@ -121,6 +121,8 @@ function showHelp(t,note){ const h=$('installHelp'); h.textContent=t; if(note){ 
 $('installBtn').onclick=async()=>{
   if(deferred){ deferred.prompt(); try{ await deferred.userChoice; }catch(e){} deferred=null; return; }
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(/Instagram|FBAN|FBAV|FB_IAB|musical_ly|BytedanceWebview|TikTok|Twitter|Snapchat/i.test(navigator.userAgent)){
+    showHelp(LANG==='es'?'Estás en el navegador de Instagram o TikTok, y desde aquí no se puede instalar. Toca ⋯ arriba a la derecha y elige «Abrir en el navegador» (o «Abrir en Chrome» / «Safari»).':'You’re in Instagram’s or TikTok’s browser, which can’t install apps. Tap ⋯ at the top right and choose “Open in browser” (or “Open in Chrome” / “Safari”).'); return; }
   if(matchMedia('(display-mode: standalone)').matches) showHelp(LANG==='es'?'Ya estás usando la app instalada.':'You’re already using the installed app.');
   else if(ios) showHelp(LANG==='es'?'En Safari, toca Compartir ⬆︎ y luego «Añadir a pantalla de inicio».':'In Safari, tap Share ⬆︎ and then “Add to Home Screen”.');
   else showHelp(LANG==='es'?'En Chrome, toca ⋮ arriba a la derecha y elige «Instalar aplicación».':'In Chrome, tap ⋮ at the top right and choose “Install app”.',

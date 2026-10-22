@@ -9,7 +9,8 @@
   if(/[?&]app\b/.test(q)){ localStorage.setItem('tw_intro_done','1');
     var nq=q.replace(/[?&]app(=[^&]*)?/,'').replace(/^&/,'?'); history.replaceState(null,'',location.pathname+nq+h); return; }
   var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  if(standalone || q || /access_token|error=/.test(h) || localStorage.getItem('tw_intro_done') || localStorage.getItem('tw_token')) return;
+  // Solo cuentan los enlaces a canales (?c=); los datos que añaden Instagram o TikTok (?fbclid=…) no
+  if(standalone || /[?&]c=/.test(q) || /access_token|error=/.test(h) || localStorage.getItem('tw_intro_done') || localStorage.getItem('tw_token')) return;
   location.replace('info.html');
 }catch(e){} })();
 </script>
@@ -656,6 +657,9 @@ const EN = {
  'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
  'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Kekii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Kekii</b>.',
  'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.',
+ 'Estás en el navegador de otra app, y desde aquí no se puede instalar.':'You’re in another app’s browser, which can’t install apps.',
+ 'Toca el menú <span class="kbd">⋯</span> (o <span class="kbd">⋮</span>) arriba a la derecha.':'Tap the <span class="kbd">⋯</span> (or <span class="kbd">⋮</span>) menu at the top right.',
+ 'Elige <b>Abrir en el navegador</b> (o <b>Abrir en Chrome</b> / <b>Safari</b>) e instálala desde allí.':'Choose <b>Open in browser</b> (or <b>Open in Chrome</b> / <b>Safari</b>) and install it from there.',
  '¿No aparece «Instalar app»? Si estás en modo incógnito, ábrela en una pestaña normal.':'Don’t see “Install app”? If you’re in incognito mode, open it in a normal tab.',
  'Hay una nueva versión de Kekii':'A new version of Kekii is available','Actualizar':'Update','Actualizando…':'Updating…',
  'Sigue viendo el directo fuera de la app':'Keep watching outside the app','El directo sigue sonando en una ventanita flotante mientras usas otras apps.':'The stream keeps playing in a small floating window while you use other apps.',
@@ -2488,6 +2492,7 @@ let deferredInstall=null;
 addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredInstall=e; });
 addEventListener('appinstalled', ()=>{ deferredInstall=null; closeSheet(); toast('Kekii instalada'); });
 function isInstalled(){ return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone===true; }
+const IN_APP_BROWSER=/Instagram|FBAN|FBAV|FB_IAB|musical_ly|BytedanceWebview|TikTok|Twitter|Snapchat/i.test(navigator.userAgent);
 function openInstallGuide(){
   closeSheet();
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -2497,10 +2502,14 @@ function openInstallGuide(){
   const t=document.createElement('div'); const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent='Instala Kekii en tu móvil';
   const sub=document.createElement('div'); sub.className='pd'; sub.textContent='Se abre como una app, a pantalla completa y con su propio icono.';
   t.append(h,sub); head.append(ic,t); sh.appendChild(head);
-  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/i.test(ua), android=/Android/i.test(ua);
+  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/i.test(ua), android=/Android/i.test(ua), inApp=IN_APP_BROWSER;
   const ol=document.createElement('ol'); ol.className='instSteps';
   const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=T(html); li.appendChild(sp); ol.appendChild(li); };
-  if(ios){
+  if(inApp){
+    step('Estás en el navegador de otra app, y desde aquí no se puede instalar.');
+    step('Toca el menú <span class="kbd">⋯</span> (o <span class="kbd">⋮</span>) arriba a la derecha.');
+    step('Elige <b>Abrir en el navegador</b> (o <b>Abrir en Chrome</b> / <b>Safari</b>) e instálala desde allí.');
+  } else if(ios){
     step('Ábrela en <b>Safari</b> (en otros navegadores de iPhone no se puede instalar).');
     step('Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> de la barra de abajo.');
     step('Baja y elige <b>Añadir a pantalla de inicio</b>, y luego <b>Añadir</b>.');
