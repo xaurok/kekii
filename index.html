@@ -1573,7 +1573,7 @@ function clipSlide(c){
 function activateSlide(s){
   document.querySelectorAll('.clipSlide iframe').forEach(f=>{ if(f.closest('.clipSlide')!==s) f.remove(); });
   const fr=s.querySelector('.clipFrame'); if(fr.querySelector('iframe')) return;
-  const f=document.createElement('iframe'); f.allow='autoplay; fullscreen'; f.allowFullscreen=true;
+  const f=document.createElement('iframe'); f.setAttribute('allow','autoplay *; fullscreen *; picture-in-picture *'); f.allowFullscreen=true;
   f.src='https://clips.twitch.tv/embed?clip='+encodeURIComponent(s.dataset.id)+'&parent='+location.hostname+'&autoplay=true&muted=false';
   fr.appendChild(f);
 }
@@ -2437,7 +2437,7 @@ function closeProfile(fromPop){
 $('profBack').onclick=()=>closeProfile();
 function openVod(v){
   $('vodTitle').textContent=v.title; $('vodFrame').innerHTML='';
-  const f=document.createElement('iframe'); f.allow='autoplay; fullscreen'; f.allowFullscreen=true;
+  const f=document.createElement('iframe'); f.setAttribute('allow','autoplay *; fullscreen *; picture-in-picture *'); f.allowFullscreen=true;
   f.src='https://player.twitch.tv/?video='+encodeURIComponent(v.id)+'&parent='+location.hostname+'&autoplay=true';
   $('vodFrame').appendChild(f); $('vodViewer').hidden=false;
   if(!prof.vodPushed){ history.pushState({vod:1}, '', location.href); prof.vodPushed=true; }
