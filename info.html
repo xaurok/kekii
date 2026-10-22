@@ -41,6 +41,7 @@ h1 em{font-style:normal;color:var(--accent)}
 .btn.ghost{background:var(--panel);border-color:var(--line);color:var(--fg)}
 .btn.ghost:hover{border-color:#3a3a42}
 .small{color:var(--muted);font-size:14px;margin:14px 0 0}
+.small .note{display:block;margin-top:6px;font-size:13px;opacity:.85}
 
 /* Funciones */
 .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;padding:30px 0 10px}
@@ -112,13 +113,14 @@ $('langBtn').onclick=()=>{ LANG = LANG==='es'?'en':'es'; try{ localStorage.setIt
 let deferred=null;
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; });
 window.addEventListener('appinstalled',()=>{ deferred=null; showHelp(LANG==='es'?'¡Instalada! Búscala en tu pantalla de inicio o en el cajón de apps.':'Installed! Find it on your home screen or in your app drawer.'); });
-function showHelp(t){ const h=$('installHelp'); h.textContent=t; h.hidden=false; }
+function showHelp(t,note){ const h=$('installHelp'); h.textContent=t; if(note){ const n=document.createElement('span'); n.className='note'; n.textContent=note; h.appendChild(n); } h.hidden=false; }
 $('installBtn').onclick=async()=>{
   if(deferred){ deferred.prompt(); try{ await deferred.userChoice; }catch(e){} deferred=null; return; }
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   if(matchMedia('(display-mode: standalone)').matches) showHelp(LANG==='es'?'Ya estás usando la app instalada.':'You’re already using the installed app.');
   else if(ios) showHelp(LANG==='es'?'En Safari, toca Compartir ⬆︎ y luego «Añadir a pantalla de inicio».':'In Safari, tap Share ⬆︎ and then “Add to Home Screen”.');
-  else showHelp(LANG==='es'?'En Chrome, toca ⋮ arriba a la derecha y elige «Instalar aplicación».':'In Chrome, tap ⋮ at the top right and choose “Install app”.');
+  else showHelp(LANG==='es'?'En Chrome, toca ⋮ arriba a la derecha y elige «Instalar aplicación».':'In Chrome, tap ⋮ at the top right and choose “Install app”.',
+    LANG==='es'?'¿No aparece «Instalar aplicación»? Si estás en modo incógnito, ábrela en una pestaña normal.':'Don’t see “Install app”? If you’re in incognito mode, open it in a normal tab.');
 };
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 

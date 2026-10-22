@@ -649,6 +649,7 @@ const EN = {
  'En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.':'In Chrome or Edge, look for the <b>install</b> <span class="kbd">⊕</span> icon on the right of the address bar.',
  'O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Kekii</b>.':'Or open the <span class="kbd">⋮</span> menu and choose <b>Install Kekii</b>.',
  'Confirma con <b>Instalar</b>.':'Confirm with <b>Install</b>.',
+ '¿No aparece «Instalar app»? Si estás en modo incógnito, ábrela en una pestaña normal.':'Don’t see “Install app”? If you’re in incognito mode, open it in a normal tab.',
  'Hay una nueva versión de Kekii':'A new version of Kekii is available','Actualizar':'Update','Actualizando…':'Updating…',
  'Sigue viendo el directo fuera de la app':'Keep watching outside the app','El directo sigue sonando en una ventanita flotante mientras usas otras apps.':'The stream keeps playing in a small floating window while you use other apps.',
  'Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.':'Put the stream in <b>full screen</b> with the player’s <span class="kbd">⛶</span> button.',
@@ -2493,6 +2494,7 @@ function openInstallGuide(){
   acts.appendChild(later);
   if(!deferredInstall) acts.style.gridTemplateColumns='1fr';
   sh.appendChild(acts);
+  if(!ios){ const ni=document.createElement('p'); ni.className='instNote'; ni.textContent=T('¿No aparece «Instalar app»? Si estás en modo incógnito, ábrela en una pestaña normal.'); sh.appendChild(ni); }
   const n=document.createElement('p'); n.className='instNote'; n.textContent='También puedes seguir usándola desde el navegador sin instalar nada.'; sh.appendChild(n);
 }
 function maybeShowInstallGuide(){
