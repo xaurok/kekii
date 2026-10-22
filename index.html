@@ -670,7 +670,7 @@ const EN = {
  'Sal con el botón o el gesto de <b>inicio</b> (no con "atrás").':'Leave with the <b>home</b> button or gesture (not “back”).',
  'El directo pasa a una <b>ventanita flotante</b> y sigue sonando.':'The stream moves to a <b>floating window</b> and keeps playing.',
  'Arrástrala para moverla a otro sitio de la pantalla.':'Drag it to move it around the screen.',
- 'Llévala al borde de la pantalla para esconderla: el sonido sigue.':'Push it to the edge of the screen to tuck it away: the sound keeps going.',
+
  'Tócala para volver a Kekii, o arrástrala hacia abajo para cerrarla.':'Tap it to go back to Kekii, or drag it down to close it.',
  '¿No aparece la ventanita? Ve a Ajustes → Aplicaciones → Chrome → Imagen en imagen y actívalo.':'No floating window? Go to Settings → Apps → Chrome → Picture-in-picture and turn it on.',
  'Entendido':'Got it','Ver fuera de la app (ventana flotante)':'Watch outside the app (floating window)',
@@ -2647,7 +2647,7 @@ function openPipGuide(){
   }
   sh.appendChild(ol);
   const tips=document.createElement('ul'); tips.className='aboutList';
-  ['Arrástrala para moverla a otro sitio de la pantalla.','Llévala al borde de la pantalla para esconderla: el sonido sigue.','Tócala para volver a Kekii, o arrástrala hacia abajo para cerrarla.'].forEach(x=>{ const l=document.createElement('li'); l.textContent=T(x); tips.appendChild(l); });
+  ['Arrástrala para moverla a otro sitio de la pantalla.','Tócala para volver a Kekii, o arrástrala hacia abajo para cerrarla.'].forEach(x=>{ const l=document.createElement('li'); l.textContent=T(x); tips.appendChild(l); });
   sh.appendChild(tips);
   if(!ios){ const n=document.createElement('p'); n.className='instNote'; n.style.textAlign='left';
     n.textContent=T('¿No aparece la ventanita? Ve a Ajustes → Aplicaciones → Chrome → Imagen en imagen y actívalo.'); sh.appendChild(n); }
