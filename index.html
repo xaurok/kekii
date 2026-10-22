@@ -18,6 +18,7 @@
 <link rel="manifest" href="manifest.json">
 <script src="https://player.twitch.tv/js/embed/v1.js" async></script>
 <meta name="theme-color" content="#0a0a0b">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -488,11 +489,12 @@ body:not(.watching) #pipBanner{display:none}
 body.peekHome #home{display:block;position:fixed;inset:0;z-index:0;padding-top:env(safe-area-inset-top,0px)}
 body.peekHome main{position:relative;z-index:2;background:var(--bg);border-radius:14px;overflow:hidden;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
 main.snap{transition:transform .22s ease-out}
+.logoMark{width:26px;height:26px;vertical-align:-5px;margin-right:6px;border-radius:7px}
 </style>
 </head>
 <body>
 <header>
-  <button class="logo" id="logoBtn" type="button" aria-label="Inicio">Kek<b>ii</b></button>
+  <button class="logo" id="logoBtn" type="button" aria-label="Inicio"><img class="logoMark" src="logo.svg" alt="">Kek<b>ii</b></button>
   <div id="searchBox"><input id="channel" placeholder="Buscar canal" autocapitalize="off" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="sugg" aria-expanded="false"><ul id="sugg" role="listbox" hidden></ul></div>
   <button class="primary" id="go">Ver</button>
   <button id="shareBtn" hidden>Compartir</button>
