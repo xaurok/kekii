@@ -463,6 +463,8 @@ body:not(.watching) #pipBanner{display:none}
 .mSug .at{color:var(--muted);font-weight:400}
 
 /* ---------- Acerca de / aviso legal ---------- */
+.sleepRow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.sleepRow .chip{flex:1 0 28%;padding:12px 0;font-size:15px;font-weight:700}
 .aboutLink{display:block;width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700;text-align:center}
 .legalNote{font-size:12px;color:var(--muted);text-align:center;margin:14px 0 2px;line-height:1.4}
 .legalNote a{color:var(--muted)}
@@ -627,6 +629,7 @@ const EN = {
  'Twitch pide tener el teléfono verificado en tu cuenta para enviar susurros.':'Twitch requires a verified phone number on your account to send whispers.',
  'Has enviado demasiados susurros. Espera un poco.':"You've sent too many whispers. Wait a bit.",'Este usuario no acepta tus susurros.':"This user doesn't accept your whispers.",
  'Vuelve a iniciar sesión para poder enviar susurros.':'Log in again to send whispers.','No se pudo enviar el susurro.':"Couldn't send the whisper.",'Enviar susurro ':'Send whisper',
+ 'Temporizador de apagado':'Sleep timer','Temporizador: el directo se ha parado.':'Sleep timer: the stream has been stopped.','El directo se parará en':'The stream will stop in','Elige cuándo quieres que se pare el directo. Funciona también en la ventana flotante.':'Choose when the stream should stop. It also works in the floating window.','Desactivar temporizador':'Turn off timer','Temporizador desactivado':'Timer turned off',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
  'Entra en un canal para cargar sus emotes':'Join a channel to load its emotes','Los emotes que uses aparecerán aquí.':'Emotes you use will show up here.',
@@ -803,7 +806,7 @@ $('who').onclick = ()=>{
     const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent='Iniciar sesión con Twitch'; b.onclick=goLogin;
     acts.appendChild(b); sh.append(h,p,acts);
     if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Kekii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
-    sh.appendChild(pipButton()); sh.appendChild(aboutButton()); sh.appendChild(langPicker()); sh.appendChild(legalNote());
+    sh.appendChild(sleepButton()); sh.appendChild(pipButton()); sh.appendChild(aboutButton()); sh.appendChild(langPicker()); sh.appendChild(legalNote());
     return;
   }
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -817,6 +820,7 @@ $('who').onclick = ()=>{
   const b2=document.createElement('button'); b2.type='button'; b2.textContent='Cerrar sesión'; b2.style.color='#ff6b6b';
   b2.onclick=()=>{ store.set('tw_token',null); store.set('tw_login',null); location.reload(); };
   acts.append(b1,b2); sh.appendChild(acts);
+  sh.appendChild(sleepButton());
   sh.appendChild(pipButton());
   sh.appendChild(aboutButton());
   if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Kekii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
@@ -2632,6 +2636,39 @@ function openPipGuide(){
   const ok=document.createElement('button'); ok.type='button'; ok.className='primary'; ok.textContent=T('Entendido'); ok.onclick=closeSheet;
   acts.appendChild(ok); sh.appendChild(acts);
 }
+
+// ---------- Temporizador de apagado ----------
+let sleepAt=0;
+function sleepLeft(){ return sleepAt ? Math.max(0, Math.ceil((sleepAt-Date.now())/60000)) : 0; }
+function sleepFire(){
+  sleepAt=0; let paused=false;
+  try{ if(tPlayer){ tPlayer.pause(); paused=true; } }catch(e){}
+  if(!paused){ const f=$('playerSlot').querySelector('iframe'); if(f) f.remove(); }
+  if(channel) sys(T('Temporizador: el directo se ha parado.'));
+  toast(T('Temporizador: el directo se ha parado.'));
+}
+function sleepCheck(){ if(sleepAt && Date.now()>=sleepAt) sleepFire(); }
+setInterval(sleepCheck, 10000);
+document.addEventListener('visibilitychange', sleepCheck);
+function openSleepTimer(){
+  closeSheet();
+  const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
+  const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
+  const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent=T('Temporizador de apagado');
+  const p=document.createElement('p'); p.className='bio'; p.textContent = sleepAt ? T('El directo se parará en')+' '+sleepLeft()+' min.' : T('Elige cuándo quieres que se pare el directo. Funciona también en la ventana flotante.');
+  sh.append(h,p);
+  const row=document.createElement('div'); row.className='sleepRow';
+  [15,30,45,60,90,120].forEach(m=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=(m<60 || m%60)? m+' min' : (m/60)+' h';
+    b.onclick=()=>{ sleepAt=Date.now()+m*60000; closeSheet(); toast(T('El directo se parará en')+' '+b.textContent); }; row.appendChild(b); });
+  sh.appendChild(row);
+  const acts=document.createElement('div'); acts.className='acts'; acts.style.gridTemplateColumns='1fr';
+  if(sleepAt){ const off=document.createElement('button'); off.type='button'; off.textContent=T('Desactivar temporizador'); off.onclick=()=>{ sleepAt=0; closeSheet(); toast(T('Temporizador desactivado')); }; acts.appendChild(off); }
+  else { const c=document.createElement('button'); c.type='button'; c.textContent=T('Cerrar'); c.onclick=closeSheet; acts.appendChild(c); }
+  sh.appendChild(acts);
+}
+function sleepButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink';
+  b.textContent = sleepAt ? T('Temporizador de apagado')+' · '+sleepLeft()+' min' : T('Temporizador de apagado'); b.onclick=openSleepTimer; return b; }
+
 function pipButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
 function maybeShowPipTip(){
   // Aviso fijo encima del chat (en un chat rápido, un mensaje se perdería). Sale en cada directo
