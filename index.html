@@ -630,7 +630,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -2430,7 +2430,7 @@ $('chattersBtn').addEventListener('click', e=>{ e.stopPropagation(); openChatter
 // ---------- Cabecera y perfil del canal ----------
 const chan = {user:null, stream:null, info:null, followers:null, timer:null};
 if(store.get('tw_chan_collapsed')) document.body.classList.add('chanCollapsed');
-function fmtUptime(iso){ const s=Math.max(0,(Date.now()-Date.parse(iso))/1000|0); const h=s/3600|0, m=(s%3600)/60|0; return h ? h+' h '+String(m).padStart(2,'0')+' min' : m+' min'; }
+function fmtUptime(iso){ if(!iso || isNaN(Date.parse(iso))) return T('en directo'); const s=Math.max(0,(Date.now()-Date.parse(iso))/1000|0); const h=s/3600|0, m=(s%3600)/60|0; return h ? h+' h '+String(m).padStart(2,'0')+' min' : m+' min'; }
 function renderChanBar(){
   const u=chan.user, st=chan.stream, info=chan.info;
   $('chanName').textContent = u ? u.display_name : channel;
@@ -2453,7 +2453,7 @@ async function loadChannelInfo(c){
   clearInterval(chan.timer); chan.user=null; chan.stream=null; chan.info=null; chan.followers=null;
   $('chanName').textContent=c; $('chanTitle').textContent=''; $('chanTags').textContent=''; $('chanMore').hidden=true; $('chanToggle').hidden=true;
   $('chanAv').textContent=''; $('chanAv').classList.remove('live');
-  if(!token) return;
+  if(!token){ loadGuestChannel(c); return; }
   try{
     const [u]=await helix('users?login='+encodeURIComponent(c)); if(!u || c!==channel) return;
     chan.user=u; userCache.set(u.login,u);
@@ -2462,6 +2462,26 @@ async function loadChannelInfo(c){
     chan.timer=setInterval(async()=>{ if(c!==channel){ clearInterval(chan.timer); return; }
       try{ const [s2]=await helix('streams?user_id='+u.id); chan.stream=s2||null; renderChanBar(); }catch(e){} }, 60000);
   }catch(e){}
+}
+// Sin sesión no hay API de Twitch: usamos los datos públicos de api.ivr.fi (foto, si está en directo, título)
+async function loadGuestChannel(c){
+  const get=async()=>{
+    const r=await fetch('https://api.ivr.fi/v2/twitch/user?login='+encodeURIComponent(c)); if(!r.ok) throw 0;
+    const j=await r.json(); const d=Array.isArray(j)?j[0]:j; if(!d || c!==channel) return;
+    const logo=d.logo||d.profileImageURL||'';
+    chan.user={id:d.id, login:d.login||c, display_name:d.displayName||c, profile_image_url:logo, guest:true,
+      broadcaster_type:(d.roles&&d.roles.isPartner)?'partner':'', description:d.bio||'', created_at:d.createdAt||null};
+    if(!logo) chan.user.profile_image_url='icon-192.png';
+    const s0=d.stream;
+    chan.stream = s0 ? {title:s0.title||'', viewer_count:s0.viewersCount ?? s0.viewers ?? 0, started_at:s0.createdAt||s0.startedAt||null,
+      game_name:(s0.game&&(s0.game.displayName||s0.game.name))||'', tags:[]} : null;
+    const lb=d.lastBroadcast;
+    chan.info = lb && lb.title ? {title:lb.title, game_name:'', tags:[]} : null;
+    if(typeof d.followers==='number') chan.followers=d.followers;
+    renderChanBar();
+  };
+  try{ await get(); }catch(e){ return; }
+  chan.timer=setInterval(()=>{ if(c!==channel || token){ clearInterval(chan.timer); return; } get().catch(()=>{}); }, 120000);
 }
 $('chanToggle').onclick=e=>{ e.stopPropagation(); const col=document.body.classList.toggle('chanCollapsed'); store.set('tw_chan_collapsed', col?'1':null); };
 $('chanTitle').onclick=()=>$('chanTitle').classList.toggle('full');
@@ -2481,7 +2501,7 @@ async function openChannelSheet(){
   const stats=document.createElement('div'); stats.className='chanStats'; sh.appendChild(stats);
   const addStat=(label,val)=>{ const d=document.createElement('span'); const b=document.createElement('b'); b.textContent=val; d.append(b,' '+label); stats.appendChild(d); return d; };
   const folStat=addStat('seguidores','…');
-  if(u){ addStat('desde '+new Date(u.created_at).getFullYear(), 'En Twitch'); }
+  if(u && u.created_at){ addStat('desde '+new Date(u.created_at).getFullYear(), 'En Twitch'); }
   if(u && u.description){ const bio=document.createElement('p'); bio.className='bio'; bio.textContent=u.description; sh.appendChild(bio); }
   const box=document.createElement('div'); box.className='liveBox';
   const lb=document.createElement('div'); lb.className='lb'; lb.textContent = st ? '● En directo · '+fmtK(st.viewer_count)+' espectadores · '+fmtUptime(st.started_at) : 'Desconectado · último directo';
@@ -2491,10 +2511,10 @@ async function openChannelSheet(){
   const game=st?st.game_name:(info&&info.game_name);
   if(game){ const g=document.createElement('span'); g.className='tagChip game'; g.textContent=game; tg.appendChild(g); }
   ((st?st.tags:(info&&info.tags))||[]).forEach(t=>{ const c=document.createElement('span'); c.className='tagChip'; c.textContent=t; tg.appendChild(c); });
-  box.append(lb,lt,tg); sh.appendChild(box);
+  box.append(lb,lt,tg); if(st || info) sh.appendChild(box);
   const acts=document.createElement('div'); acts.className='acts';
   const btn=(label, fn, cls)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=label; if(cls) b.className=cls; b.onclick=fn; acts.appendChild(b); return b; };
-  if(u) btn('Clips del canal', async ()=>{
+  if(u && token) btn('Clips del canal', async ()=>{
     closeSheet(); toast('Cargando clips…');
     try{ const list=await helix('clips?first=50&broadcaster_id='+u.id); if(!list.length){ toast('Este canal no tiene clips'); return; }
       list.forEach(c=>c.game_name=c.game_id===((st||info||{}).game_id)?game:''); clipsState.list=list; openClipViewer(0);
@@ -2504,7 +2524,7 @@ async function openChannelSheet(){
   if(u && canWhisper() && u.login!==login) btn('Enviar susurro', ()=>{ closeSheet(); openActivity('whispers', u.login); openConvo(u.login); });
   if(u) sh.appendChild(relationRow(u));
   sh.appendChild(acts);
-  if(!token){ folStat.remove(); pd.textContent='@'+channel+' · inicia sesión para ver más'; return; }
+  if(!token){ if(chan.followers!=null) folStat.firstChild.textContent=fmtK(chan.followers); else folStat.remove(); if(!u) pd.textContent='@'+channel+' · inicia sesión para ver más'; return; }
   try{
     if(chan.followers==null && u){ const r=await fetch('https://api.twitch.tv/helix/channels/followers?first=1&broadcaster_id='+u.id,{headers:{'Client-Id':CLIENT_ID,Authorization:'Bearer '+token}}); chan.followers=(await r.json()).total; }
     folStat.firstChild.textContent = chan.followers!=null ? fmtK(chan.followers) : '—';
