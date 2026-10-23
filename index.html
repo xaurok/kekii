@@ -508,6 +508,8 @@ body:not(.watching) #pipBanner{display:none}
 .mSug{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--field);font-weight:700;font-size:14px}
 .mSug.first{border-color:var(--accent)}
 .mSug .at{color:var(--muted);font-weight:400}
+.mSug.em{padding:4px 12px 4px 6px}
+.mSug.em img{height:28px;width:auto;max-width:56px;object-fit:contain}
 
 /* ---------- Acerca de / aviso legal ---------- */
 .sleepRow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
@@ -2973,8 +2975,44 @@ function mentionQuery(){
   const m=/(^|\s)@([\w]*)$/.exec(t.value.slice(0,pos));
   return m ? {q:m[2].toLowerCase(), start:pos-m[2].length-1, end:pos} : null;
 }
+// Autocompletar emotes: «:ke» → KEKW, Kappa… (mínimo 2 letras después de los dos puntos)
+function emoteQuery(){
+  const t=$('text'); const pos=t.selectionStart ?? t.value.length;
+  const m=/(^|\s):([^\s:]{2,})$/.exec(t.value.slice(0,pos));
+  return m ? {q:m[2].toLowerCase(), start:pos-m[2].length-1, end:pos} : null;
+}
+function updateEmoteSug(eq){
+  const bar=$('mentionBar'); const all=allEmotes(); const q=eq.q;
+  const rec=recentEmotes(); const rank=n=>{ const i=rec.indexOf(n); return i<0?999:i; };
+  let hits=[...all.entries()].filter(([n])=>n.toLowerCase().includes(q));
+  hits.sort((a,b)=>{ const ra=rank(a[0]), rb=rank(b[0]); if(ra!==rb) return ra-rb;
+    const as=a[0].toLowerCase().startsWith(q), bs=b[0].toLowerCase().startsWith(q); return (bs-as) || a[0].length-b[0].length || a[0].localeCompare(b[0]); });
+  hits=hits.slice(0,20);
+  bar.textContent='';
+  if(!hits.length){ bar.hidden=true; return; }
+  hits.forEach(([n,e],i)=>{
+    const b=document.createElement('button'); b.type='button'; b.className='mSug em'+(i===0?' first':''); b.title=n;
+    const im=document.createElement('img'); im.src=e.url; im.alt=''; im.loading='lazy';
+    const l=document.createElement('span'); l.textContent=n;
+    b.append(im,l);
+    b.addEventListener('pointerdown', ev=>ev.preventDefault()); // que no se cierre el teclado
+    b.onclick=()=>applyEmoteSug(n);
+    bar.appendChild(b);
+  });
+  bar.hidden=false; bar.scrollLeft=0;
+}
+function applyEmoteSug(n){
+  const t=$('text'); const eq=emoteQuery(); if(!eq) return;
+  const before=t.value.slice(0,eq.start), after=t.value.slice(eq.end);
+  const ins=n+' ';
+  t.value=before+ins+after.replace(/^\s+/,'');
+  const p=(before+ins).length; t.focus(); try{ t.setSelectionRange(p,p); }catch(e){}
+  store.set('tw_recent_em', JSON.stringify([n, ...recentEmotes().filter(x=>x!==n)].slice(0,24)));
+  $('mentionBar').hidden=true;
+}
 function updateMentions(){
   const bar=$('mentionBar'); const mq=mentionQuery();
+  if(!mq && channel){ const eq=emoteQuery(); if(eq){ updateEmoteSug(eq); return; } }
   if(!mq || !channel){ bar.hidden=true; return; }
   const list=[]; const seen=new Set();
   const push=(login,name,color,score)=>{ if(seen.has(login) || login===login0()) return; seen.add(login); list.push({login,name,color,score}); };
