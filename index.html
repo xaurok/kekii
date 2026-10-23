@@ -202,6 +202,11 @@ body.homeView main{display:none}
 #replyBar{display:flex;align-items:center;gap:8px;padding:6px 10px 0;font-size:13px;color:var(--muted);min-width:0}
 #replyBar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #replyBar b{color:var(--accent)}
+#docViewer{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+#docViewer .docTop{display:flex;align-items:center;gap:6px;height:48px;padding:0 6px;border-bottom:1px solid var(--line);flex:none}
+#docViewer .docTop b{font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#docViewer .docTop button{background:none;border:0;width:44px;height:44px;font-size:22px;cursor:pointer;border-radius:10px}
+#docViewer iframe{flex:1;border:0;width:100%;background:var(--bg)}
 #sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--panel);border-radius:16px 16px 0 0;border-top:1px solid var(--line);
   max-height:80vh;overflow-y:auto;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-width:520px;margin:0 auto}
@@ -595,6 +600,7 @@ main.snap{transition:transform .22s ease-out}
     </form>
   </div>
 </main>
+<div id="docViewer" hidden role="dialog"><div class="docTop"><button type="button" id="docBack" aria-label="Volver">←</button><b id="docTitle"></b></div></div>
 <div id="activity" hidden role="dialog" aria-label="Actividad">
   <div class="actTop">
     <button class="iconBtn" id="actBack" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
@@ -1874,6 +1880,8 @@ function openChannel(c){
 $('logoBtn').onclick=()=>showHome(true);
 $('homeBtn').onclick=()=>showHome(true);
 window.addEventListener('popstate',()=>{
+  if(doc.ignorePop){ doc.ignorePop=false; return; }
+  if(!$('docViewer').hidden){ closeDoc(true); return; }
   if(prof.vodIgnore){ prof.vodIgnore=false; return; }
   if(!$('vodViewer').hidden){ closeVod(true); return; }
   if(clipsState.ignorePop){ clipsState.ignorePop=false; return; }
@@ -2978,6 +2986,43 @@ $('text').addEventListener('keydown', e=>{
   if(e.key==='Escape') bar.hidden=true;
 }, true);
 
+
+// ---------- Páginas de Kekii (privacidad, info) dentro de la app: «atrás» vuelve a la app ----------
+const doc={pushed:false, ignorePop:false};
+function openDoc(url, title){
+  closeSheet();
+  const v=$('docViewer'); v.querySelector('iframe')?.remove();
+  $('docTitle').textContent=T(title);
+  const f=document.createElement('iframe'); f.src=url; f.title=T(title);
+  f.onload=()=>{ try{
+    const d=f.contentDocument; if(!d) return;
+    d.addEventListener('click', e=>{
+      const a=e.target.closest && e.target.closest('a[href]'); if(!a) return;
+      const u=new URL(a.href, f.contentWindow.location.href);
+      if(u.origin!==location.origin){ if(u.protocol.startsWith('http')){ e.preventDefault(); window.open(u.href,'_blank','noopener'); } return; }
+      // Enlaces que vuelven a la app (logo, «Abrir Kekii»): cerramos el visor
+      const path=u.pathname.slice(BASE.length);
+      if(path==='' || path==='index.html'){ e.preventDefault(); closeDoc(); }
+      else a.removeAttribute('target');
+    });
+    const t=d.title && d.title.split('·')[0].trim(); if(t && t!=='Kekii') $('docTitle').textContent=t;
+  }catch(e){} };
+  v.appendChild(f); v.hidden=false;
+  if(!doc.pushed){ history.pushState({doc:1}, '', location.href); doc.pushed=true; }
+}
+function closeDoc(fromPop){
+  const v=$('docViewer'); if(v.hidden) return;
+  v.hidden=true; v.querySelector('iframe')?.remove();
+  if(doc.pushed){ doc.pushed=false; if(!fromPop){ doc.ignorePop=true; history.back(); } }
+}
+$('docBack').onclick=()=>closeDoc();
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('docViewer').hidden) closeDoc(); });
+// Los enlaces a páginas propias (privacidad, info) se abren en el visor en vez de salir de la app
+document.addEventListener('click', e=>{
+  const a=e.target.closest && e.target.closest('a[href]'); if(!a || e.defaultPrevented) return;
+  const h=a.getAttribute('href')||'';
+  if(/^(privacidad|privacy|info)\.html/.test(h)){ e.preventDefault(); openDoc(h, /^info/.test(h)?'Kekii':(h.startsWith('privacy.')?'Privacy policy':'Política de privacidad')); }
+});
 
 // ---------- Acerca de Kekii (aviso de app no oficial y privacidad) ----------
 function legalNote(){ const n=document.createElement('p'); n.className='legalNote';
