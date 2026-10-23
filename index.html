@@ -171,6 +171,9 @@ body.homeView main{display:none}
 .msg{cursor:pointer;border-radius:6px}
 .msg:not(.sys):hover{background:var(--field)}
 .msg.sel{background:var(--field)}
+.gifMsg{display:inline-block;vertical-align:middle;margin:3px 2px}
+.gifMsg img{display:block;max-height:120px;max-width:min(220px,60vw);border-radius:8px}
+.hist .gifMsg img,.thRow .gifMsg img{max-height:90px}
 .replyTo{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px}
 .replyTo.thr{cursor:pointer}.replyTo.thr::before{content:"↳ ";color:var(--accent)}
 .thList{display:flex;flex-direction:column;margin-top:8px}
@@ -999,7 +1002,7 @@ function showNotice(m){
   if(sysMsg){ const t=document.createElement('div'); t.textContent=sysMsg; d.appendChild(t); }
   if(m.trailing){ const t=document.createElement('div'); t.style.marginTop='4px';
     const n=document.createElement('span'); n.className='name'; n.style.color=colorFor(m.tags['display-name']||'', m.tags.color); n.textContent=(m.tags['display-name']||'')+': ';
-    t.appendChild(n); renderText(t, m.trailing, parseEmotes(m.tags.emotes)); d.appendChild(t); }
+    t.appendChild(n); renderText(t, m.trailing, parseEmotes(m.tags.emotes).concat(parseGifs(m.tags.gifs))); d.appendChild(t); }
   push(d);
 }
 // Panel de puntos de canal y Bits
@@ -1202,11 +1205,14 @@ function renderText(container, text, twEmotes, cheer){
   const cps = [...text]; const parts = []; let pos = 0;
   twEmotes.sort((a,b)=>a.start-b.start).forEach(e=>{
     if(e.start>pos) parts.push({t:cps.slice(pos,e.start).join('')});
-    parts.push({tw:e.id, name:cps.slice(e.start,e.end+1).join('')}); pos=e.end+1;
+    const nm=cps.slice(e.start,e.end+1).join('');
+    parts.push(e.gif ? {gif:e.gif, name:nm} : {tw:e.id, name:nm}); pos=e.end+1;
   });
   if(pos<cps.length) parts.push({t:cps.slice(pos).join('')});
   let last = null; // last emote span, for zero-width overlays
   for(const p of parts){
+    if(p.gif){ const g=document.createElement('span'); g.className='gifMsg'; const im=document.createElement('img'); im.alt=im.title=p.name; im.loading='lazy';
+      im.onerror=()=>{ g.replaceWith(document.createTextNode(p.name)); }; im.src=p.gif; g.appendChild(im); container.appendChild(g); last=null; continue; }
     if(p.tw){ last = emoteNode(`https://static-cdn.jtvnw.net/emoticons/v2/${p.tw}/default/dark/2.0`,p.name); container.appendChild(last); continue; }
     for(const w of p.t.split(/(\s+)/)){
       if(cheer){ const cn=cheerNode(w); if(cn){ container.appendChild(cn); last=null; continue; } }
@@ -1304,6 +1310,11 @@ function parse(line){
   if(m.trailing===undefined && m.params.length>=2) m.trailing=m.params.pop();
   return m;
 }
+// GIFs de Twitch (GIPHY): etiqueta gifs = "inicio-fin|id|url" separados por comas (la URL puede tener comas)
+function parseGifs(tag){
+  if(!tag) return [];
+  return tag.split(/,(?=\d+-\d+\|)/).map(x=>{ const m=/^(\d+)-(\d+)\|([^|]*)\|(https?:\/\/.+)$/.exec(x); return m ? {start:+m[1], end:+m[2], gifId:m[3], gif:m[4]} : null; }).filter(Boolean);
+}
 function parseEmotes(tag){
   if(!tag) return [];
   return tag.split('/').flatMap(g=>{ const [id,r]=g.split(':'); return r.split(',').map(x=>{const [s,e]=x.split('-'); return {id,start:+s,end:+e};}); });
@@ -1326,7 +1337,7 @@ function connect(){
     switch(m.cmd){
       case 'PING': ws.send('PONG :'+m.trailing); break;
       case 'ROOMSTATE': if(m.tags['room-id'] && !ws.loaded7){ ws.loaded7=true; roomId=m.tags['room-id']; loadChannel7tv(roomId); loadChannelBttvFfz(roomId); loadTwitchEmotes(); loadBadges(); loadCheermotes(); } break;
-      case 'PRIVMSG': showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes),
+      case 'PRIVMSG': showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes).concat(parseGifs(m.tags.gifs)),
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
       case 'USERNOTICE': showNotice(m); break;
       case 'USERSTATE': me.badges = m.tags.badges; me.badgeInfo = m.tags['badge-info']; me.color = m.tags.color || me.color; me.name = m.tags['display-name'] || me.name; break;
@@ -1784,7 +1795,7 @@ async function loadRecentMessages(ch){
     const frag = document.createDocumentFragment(); const hs = new Map(); let n=0;
     for(const l of lines){
       const m = parse(l); if(m.cmd!=='PRIVMSG') continue; n++;
-      showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes),
+      showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes).concat(parseGifs(m.tags.gifs)),
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'],
          t:+m.tags['tmi-sent-ts']||0, badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id'], old:true, target:frag, histStore:hs});
     }
