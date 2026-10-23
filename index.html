@@ -3296,9 +3296,9 @@ if('serviceWorker' in navigator){
     reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw) return;
       nw.addEventListener('statechange',()=>{ if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdateBanner(); }); });
     // Busca versiones nuevas al volver a la app o a la ventana (en el ordenador la pestaña suele quedarse
-    // abierta) y cada 10 minutos; como mucho una vez por minuto
-    let lastCheck=Date.now();
-    const check=()=>{ if(Date.now()-lastCheck<60000) return; lastCheck=Date.now(); reg.update().catch(()=>{}); };
+    // abierta) y cada 10 minutos; como mucho una vez cada 10 segundos
+    let lastCheck=0;
+    const check=()=>{ if(Date.now()-lastCheck<10000) return; lastCheck=Date.now(); reg.update().catch(()=>{}); };
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check(); });
     addEventListener('focus', check);
     setInterval(check, 10*60*1000);
