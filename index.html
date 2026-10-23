@@ -78,7 +78,7 @@ main{flex:1;display:flex;min-height:0}
 /* Capa invisible sobre el vídeo (menos la barra de controles de abajo) para no abrir Twitch sin querer al tocar el título o los botones */
 #tapShield{display:none;position:absolute;left:0;right:0;top:0;bottom:56px;z-index:3;-webkit-tap-highlight-color:transparent}
 body.watching:not(.mini) #tapShield{display:block}
-.noShieldRoot #tapShield,body.noShieldTmp #tapShield{display:none!important}
+body.noShieldTmp #tapShield{display:none!important}
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line)}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -826,8 +826,6 @@ function langPicker(){
 }
 
 const $ = id => document.getElementById(id);
-// Prueba: kekii.app/?sincapa desactiva la capa invisible sobre el vídeo
-if(/[?&]sincapa\b/.test(location.search)) document.documentElement.classList.add('noShieldRoot');
 const store = {
   get(k){try{return localStorage.getItem(k)}catch(e){return null}},
   set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
