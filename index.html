@@ -3024,11 +3024,13 @@ function openSleepTimer(){
 function sleepButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink';
   b.textContent = sleepAt ? T('Temporizador de apagado')+' · '+sleepLeft()+' min' : T('Temporizador de apagado'); b.onclick=openSleepTimer; return b; }
 
-function pipButton(){ const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
+// La ventanita flotante es cosa del móvil: en el ordenador el reproductor de Twitch ya trae la suya
+const IS_MOBILE=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints>1);
+function pipButton(){ if(!IS_MOBILE) return document.createDocumentFragment(); const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
 function maybeShowPipTip(){
   // Aviso fijo encima del chat (en un chat rápido, un mensaje se perdería). Sale en cada directo
   // hasta que el usuario abre la guía o lo cierra con la ✕.
-  if($('pipBanner')) return;
+  if(!IS_MOBILE || $('pipBanner')) return;
   if(store.get('tw_pip_tip')==='done') return;
   const d=document.createElement('div'); d.id='pipBanner';
   const go=document.createElement('button'); go.type='button'; go.className='pipGo';
