@@ -3018,8 +3018,7 @@ function openAbout(){
   const a=document.createElement('a'); a.href=PRIVACY_URL; a.target='_blank'; a.rel='noopener'; a.textContent='Política de privacidad';
   const w=document.createElement('a'); w.href='info.html'; w.target='_blank'; w.rel='noopener'; w.textContent='Página de Kekii';
   const c=document.createElement('button'); c.type='button'; c.textContent='Cerrar'; c.onclick=closeSheet;
-  const rp=document.createElement('a'); rp.href='#'; rp.textContent=T('Informar de un problema'); rp.onclick=e=>{ e.preventDefault(); reportProblem(); };
-  acts.append(w,a,rp,c); sh.appendChild(acts);
+  acts.append(w,a,c); sh.appendChild(acts);
 }
 
 
