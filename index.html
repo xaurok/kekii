@@ -734,7 +734,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Ya estás en directo · toca ▶ para continuar':'You’re live now · tap ▶ to continue','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -2525,7 +2525,8 @@ function createPlayer(c){
           if(c!==channel || !tPlayer) return;
           let lag=null; try{ const st=tPlayer.getPlaybackStats(); lag=st && (st.hlsLatencyBroadcaster ?? st.broadcasterLatency); }catch(e){}
           const waited=(Date.now()-createdAt)/1000;
-          if((lag!=null && lag>4) || (lag==null && waited>8)) jumpLive(true);
+          // (con el reproductor pequeño no: Twitch no lo reanudaría solo y tendrías que volver a tocar ▶)
+          if(!playerSmall() && ((lag!=null && lag>4) || (lag==null && waited>8))) jumpLive(true);
         }, 1500);
       });
       // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
@@ -2541,19 +2542,19 @@ function createPlayer(c){
 }
 let shieldBackAt=0;
 function shieldBack(){ if(!document.body.classList.contains('noShieldTmp')) return; document.body.classList.remove('noShieldTmp'); shieldBackAt=Date.now(); diag('vuelven capa y botón'); }
+// Twitch solo deja arrancar el vídeo sin un toque dentro del reproductor si mide al menos 400×300 (en vertical no llega)
+function playerSmall(){ const r=$('playerSlot').getBoundingClientRect(); return r.width<400 || r.height<300; }
 // Saltar al momento actual: Twitch solo recarga el canal si está pausado
 function jumpLive(silent){
   if(!tPlayer){ if(channel) createPlayer(channel); return; }
   diag('⏭ salto '+(silent?'automático':'manual')+' · encima: '+diagCover());
-  if(!silent) toast('Saltando al directo…');
+  if(!silent && !playerSmall()) toast('Saltando al directo…');
   // El reproductor de Twitch no se reanuda solo si hay algo encima del vídeo: quitamos la capa unos segundos
   document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 7000);
   try{ tPlayer.pause(); }catch(e){}
   setTimeout(()=>{ try{ tPlayer.setChannel(channel); diag('setChannel hecho'); }catch(e){ diag('setChannel error '+e); } }, 250);
-  // Experimento (solo en /diag): si Twitch no arranca, probar en silencio y luego quitar el silencio
-  if(DIAG) setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()){ diag('EXPERIMENTO: play en silencio'); tPlayer.setMuted(true); tPlayer.play();
-      setTimeout(()=>{ try{ diag('tras play en silencio: pausado='+tPlayer.isPaused()+' silencio='+tPlayer.getMuted()); tPlayer.setMuted(false);
-        setTimeout(()=>{ try{ diag('tras quitar silencio: pausado='+tPlayer.isPaused()+' silencio='+tPlayer.getMuted()); }catch(e){} }, 800); }catch(e){} }, 1000); } }catch(e){ diag('error '+e); } }, 1500);
+  // Reproductor pequeño (vertical): Twitch no dejará reanudarlo solo, así que lo decimos al momento
+  if(playerSmall()){ diag('reproductor pequeño: hay que tocar ▶'); setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) toast(T('Ya estás en directo · toca ▶ para continuar')); }catch(e){} }, 900); return; }
   [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()){ diag('reintento play ('+ms+' ms) · encima: '+diagCover()); tPlayer.play(); setTimeout(()=>{ try{ diag('  → pausado='+tPlayer.isPaused()+' silencio='+tPlayer.getMuted()); }catch(e){} }, 300); } }catch(e){} }, ms));
   // Si el navegador no deja reanudarlo solo, avisamos en vez de dejarlo parado sin más
   setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) toast(T('Toca ▶ para continuar el directo')); }catch(e){} }, 6800);
