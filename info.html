@@ -7,7 +7,9 @@
 <meta name="description" content="Ve los emotes de 7TV, BTTV y FFZ en Android y iPhone. Kekii es una app gratis para ver directos de Twitch y chatear con emotes desde el móvil, sin descargar nada de la tienda.">
 <link rel="canonical" href="https://kekii.app/info.html">
 <meta name="theme-color" content="#0a0a0b">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Kekii", "url": "https://kekii.app/", "description": "App gratis para ver directos de Twitch y chatear con emotes de 7TV, BTTV y FFZ en el móvil.", "applicationCategory": "EntertainmentApplication", "operatingSystem": "Android, iOS, Windows, macOS", "browserRequirements": "Requiere un navegador moderno", "inLanguage": ["es", "en"], "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "image": "https://kekii.app/icon-512.png"}</script>
@@ -116,6 +118,8 @@ const FEATS=[
 
 let LANG='es';
 try{ LANG=localStorage.getItem('tw_ui_lang') || ''; }catch(e){}
+// Los buscadores (Google, Bing…) ven siempre la versión en español, que es la principal
+if(/bot|crawl|spider|slurp|google|bing|yandex|duckduck/i.test(navigator.userAgent)) LANG='es';
 if(!LANG) LANG=(navigator.language||'es').toLowerCase().startsWith('es')?'es':'en';
 const $=id=>document.getElementById(id);
 
