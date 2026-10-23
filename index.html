@@ -84,6 +84,15 @@ body.headerHidden header{display:none}
 #statusBar::-webkit-scrollbar{display:none}
 /* Chat estrecho: los iconos menos usados pasan al menú «⋯» */
 #barMoreBtn{display:none;position:relative}
+/* Chat muy estrecho: fila de escribir compacta (sin puntos y enviar solo con flecha) */
+#chatCol{container-type:inline-size}
+@container (max-width:270px){
+  #pointsBtn{display:none}
+  #sendBtn{font-size:0;padding-inline:12px}
+  #sendBtn::after{content:"➤";font-size:17px;line-height:1}
+  #send{gap:4px;padding:6px}
+  #chat{padding-inline:8px}
+}
 #statusBar.narrow #chanToggle,#statusBar.narrow #sleepBtn,#statusBar.narrow #chattersBtn,#statusBar.narrow #homeBtn{display:none!important}
 #statusBar.narrow #barMoreBtn{display:inline-flex}
 #statusBar:has(#sleepBtn.on) #barMoreBtn::after{content:"";position:absolute;top:5px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
@@ -2544,8 +2553,8 @@ $('barMoreBtn').onclick=openMoreMenu;
   new MutationObserver(rs=>{ if(rs.some(r=>r.target!==sb)) requestAnimationFrame(fit); }).observe(sb,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','class'],characterData:true});
   fit(); })();
 function chatInnerW(){ const c=$('chatCol'); return c.getBoundingClientRect().width-(parseFloat(getComputedStyle(c).paddingRight)||0); }
-// Mínimo 240 px (si no caben todos los iconos, los menos usados pasan al menú «⋯»)
-function chatWLimits(){ return {min:240, max:Math.max(240, innerWidth-400)}; }
+// Mínimo 170 px (para poder llegar al punto sin barras en el móvil en horizontal; lo que no cabe pasa al menú «⋯»)
+function chatWLimits(){ return {min:170, max:Math.max(170, innerWidth-400)}; }
 function applyChatW(w, save){
   const r=document.documentElement.style;
   if(w==null){ r.removeProperty('--chatW'); if(save) store.set('tw_chat_w', null); return; }
