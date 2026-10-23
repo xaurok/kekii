@@ -151,6 +151,7 @@ code{font-size:12px;background:var(--bg);padding:1px 4px;border-radius:4px}
   #chatToggle{display:flex}
   body:not(.chatHidden) #chatToggle{display:none}
   #hideChatBtn{display:inline-flex}
+  #statusBar .iconBtn{padding:6px}
 }
 
 /* ---------- Inicio ---------- */
@@ -608,7 +609,7 @@ main.snap{transition:transform .22s ease-out}
       <button class="iconBtn" id="chattersBtn" type="button" aria-label="Usuarios del chat" title="Usuarios del chat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.2c2.4.1 4.4 1.7 5 4.8"/></svg></button>
       <button class="iconBtn actBtn" type="button" aria-label="Actividad"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></svg><span class="actBadge" hidden></span></button>
       <button class="iconBtn" id="homeBtn" type="button" aria-label="Inicio"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></button>
-      <button class="iconBtn" id="hideChatBtn" type="button" aria-label="Ocultar chat">Ocultar <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+      <button class="iconBtn" id="hideChatBtn" type="button" aria-label="Ocultar chat" title="Ocultar chat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 6 6 6-6 6M12 6l6 6-6 6"/></svg></button>
     </div>
     <div id="chanMore" hidden><div id="chanTitle"></div><div id="chanTags"></div></div>
     <div id="chat"></div>
@@ -2384,9 +2385,12 @@ async function toggleFsChat(){
   document.body.classList.add('fsChat'); document.body.classList.remove('chatHidden'); fsUi();
   if(IS_MOBILE){ try{ await screen.orientation.lock('landscape'); }catch(e){} }
 }
+// Al salir de pantalla completa y girar, algunos Android dejan la página ampliada: forzamos escala 1 un momento
+function fixZoom(){ const m=document.querySelector('meta[name=viewport]'); if(!m) return; const c=m.content;
+  m.content=c+',maximum-scale=1'; setTimeout(()=>{ m.content=c+',maximum-scale=1.01'; }, 600); setTimeout(()=>{ m.content=c; }, 1200); }
 function onFsChange(){
   const fe=document.fullscreenElement||document.webkitFullscreenElement;
-  if(!fe && document.body.classList.contains('fsChat')){ document.body.classList.remove('fsChat'); try{ screen.orientation.unlock(); }catch(e){} fsUi(); }
+  if(!fe && document.body.classList.contains('fsChat')){ document.body.classList.remove('fsChat'); try{ screen.orientation.unlock(); }catch(e){} fsUi(); fixZoom(); }
 }
 document.addEventListener('fullscreenchange', onFsChange); document.addEventListener('webkitfullscreenchange', onFsChange);
 $('fsBtn').onclick=e=>{ e.stopPropagation(); toggleFsChat(); };
