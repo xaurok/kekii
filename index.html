@@ -184,6 +184,8 @@ body.homeView main{display:none}
 .emCard img{height:112px;max-width:min(260px,70vw);object-fit:contain;image-rendering:auto}
 .emCardName{margin-top:12px;font:700 22px var(--display);overflow-wrap:anywhere}
 .emCardSrc{margin-top:4px;color:var(--muted);font-size:14px}
+.ext{display:inline-block;width:.9em;height:.9em;margin-left:5px;vertical-align:-.08em;opacity:.7;flex:none}
+.relBtn .ext{margin-left:-3px}
 .replyTo{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px}
 .replyTo.thr{cursor:pointer}.replyTo.thr::before{content:"↳ ";color:var(--accent)}
 .thList{display:flex;flex-direction:column;margin-top:8px}
@@ -1049,8 +1051,8 @@ function openPointsSheet(){
   [1,100,1000,5000,10000].forEach(a=>{ const ti=tierImage(a); if(!ti || !ti.url) return; const d=document.createElement('div'); d.style.color=ti.color; const i=document.createElement('img'); i.src=ti.url; i.alt=''; d.append(i, String(a)); tiers.appendChild(d); });
   if(tiers.childElementCount) sh.appendChild(tiers);
   const acts=document.createElement('div'); acts.className='acts';
-  const a1=document.createElement('a'); a1.href='https://www.twitch.tv/'+channel; a1.target='_blank'; a1.rel='noopener'; a1.className='primary'; a1.textContent='Canjear puntos en Twitch';
-  const a2=document.createElement('a'); a2.href='https://www.twitch.tv/'+channel; a2.target='_blank'; a2.rel='noopener'; a2.textContent='Hacer cheer en Twitch';
+  const a1=document.createElement('a'); a1.href='https://www.twitch.tv/'+channel; a1.target='_blank'; a1.rel='noopener'; a1.className='primary'; a1.textContent='Canjear puntos en Twitch'; extIcon(a1);
+  const a2=document.createElement('a'); a2.href='https://www.twitch.tv/'+channel; a2.target='_blank'; a2.rel='noopener'; a2.textContent='Hacer cheer en Twitch'; extIcon(a2);
   acts.append(a1,a2); sh.appendChild(acts);
 }
 $('pointsBtn').onclick=openPointsSheet;
@@ -2005,10 +2007,10 @@ async function openSheet(info, el){
   if(canWhisper() && info.login!==login) btn('Enviar susurro', ()=>{ closeSheet(); openActivity('whispers', info.login); openConvo(info.login); });
   const isSub = parseBadges(info.badges).some(b=>b.set==='subscriber' || b.set==='founder');
   if(channel && info.login!==channel && info.login!==login && !isSub){
-    btn('🎁 Regalar suscripción', async ()=>{
+    extIcon(btn('🎁 Regalar suscripción', async ()=>{
       try{ await navigator.clipboard.writeText(info.login); toast('Nombre copiado: elige "Regalar a alguien" y pégalo'); }catch(e){ toast('Busca a '+info.login+' en "Regalar a alguien"'); }
       const a=document.createElement('a'); a.href='https://www.twitch.tv/subs/'+channel; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove();
-    });
+    }));
   }
   btn('Ver su canal', ()=>{ closeSheet(); openChannel(info.login); });
   btn('Ver perfil', ()=>openProfile(info.login));
@@ -2518,17 +2520,20 @@ async function relationStatus(u){
   }catch(e){}
   return r;
 }
+// Flechita ↗ para los botones que abren Twitch
+const EXT_SVG='<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 16 16 8"/><path d="M9 8h7v7"/></svg>';
+function extIcon(el){ el.insertAdjacentHTML('beforeend', EXT_SVG); return el; }
 function relationRow(u){
   const row=document.createElement('div'); row.className='relRow';
-  const fol=document.createElement('a'); fol.className='relBtn cta'; fol.href='https://www.twitch.tv/'+u.login; fol.target='_blank'; fol.rel='noopener'; fol.innerHTML=HEART; fol.append(' Seguir');
-  const sub=document.createElement('a'); sub.className='relBtn'; sub.href='https://www.twitch.tv/subs/'+u.login; sub.target='_blank'; sub.rel='noopener'; sub.innerHTML=STAR; sub.append(' Suscribirse');
+  const fol=document.createElement('a'); fol.className='relBtn cta'; fol.href='https://www.twitch.tv/'+u.login; fol.target='_blank'; fol.rel='noopener'; fol.innerHTML=HEART; fol.append(' Seguir'); extIcon(fol);
+  const sub=document.createElement('a'); sub.className='relBtn'; sub.href='https://www.twitch.tv/subs/'+u.login; sub.target='_blank'; sub.rel='noopener'; sub.innerHTML=STAR; sub.append(' Suscribirse'); extIcon(sub);
   const note=document.createElement('div'); note.className='relNote'; note.textContent='Se abre en Twitch para seguir o suscribirte.';
   row.append(fol, sub, note);
   if(u.login===login){ row.remove(); return document.createDocumentFragment(); }
   relationStatus(u).then(r=>{
-    if(r.follow){ fol.className='relBtn on'; fol.innerHTML=HEART; fol.append(' Siguiendo');
+    if(r.follow){ fol.className='relBtn on'; fol.innerHTML=HEART; fol.append(' Siguiendo'); extIcon(fol);
       if(r.followedAt) fol.title='Desde el '+new Date(r.followedAt).toLocaleDateString(LOC,{day:'numeric',month:'long',year:'numeric'}); }
-    if(r.tier){ sub.className='relBtn on'; sub.innerHTML=STAR; sub.append(' Suscrito'+({'1000':'',  '2000':' · nivel 2','3000':' · nivel 3'}[r.tier]||'')); }
+    if(r.tier){ sub.className='relBtn on'; sub.innerHTML=STAR; sub.append(' Suscrito'+({'1000':'',  '2000':' · nivel 2','3000':' · nivel 3'}[r.tier]||'')); extIcon(sub); }
     if(r.follow && r.tier) note.textContent='Ya sigues a este canal y estás suscrito.';
     else if(!(me.scopes||[]).includes('user:read:subscriptions') && token) note.textContent='Vuelve a iniciar sesión para ver si estás suscrito. Las acciones se abren en Twitch.';
   });
