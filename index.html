@@ -109,9 +109,9 @@ body.headerHidden header{display:none}
 #fsBtn.compact{padding:7px;gap:0}
 #fsBtn.compact span{max-width:0;opacity:0}
 body.watching:not(.mini) #fsBtn{display:inline-flex}
-/* Dentro del modo, «Salir» va relleno de verde: se ve que está activado */
-body.fsChat #fsBtn{background:var(--accent);color:var(--accent-fg,#04201a);border-color:var(--accent)}
-body.fsChat #fsBtn svg{color:var(--accent-fg,#04201a)}
+/* Dentro del modo, «Salir»: fondo semitransparente, sin verde y con flecha de volver (distinto de «Con chat») */
+body.fsChat #fsBtn{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.35)}
+body.fsChat #fsBtn svg{color:#fff}
 #chatToggle{display:none;position:absolute;right:calc(10px + env(safe-area-inset-right,0px));top:54px;z-index:5;
   align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:700;backdrop-filter:blur(6px)}
 #chatCol{width:var(--chatW,360px);display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--panel);min-height:0;position:relative}
@@ -2415,7 +2415,7 @@ addSwipe($('actBody'),
 // ---------- Minirreproductor ----------
 // ---------- Pantalla completa con chat: Kekii entera (vídeo + chat al lado), en horizontal en el móvil ----------
 const FS_IN='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V4h4M21 8V4h-4M3 16v4h4M21 16v4h-4"/><path d="M14 9h4v5h-2l-2 2z"/></svg>';
-const FS_OUT='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4H4M16 3v4h4M8 21v-4H4M16 21v-4h4"/></svg>';
+const FS_OUT='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
 function fsUi(){ const on=document.body.classList.contains('fsChat'); const b=$('fsBtn');
   b.innerHTML=(on?FS_OUT:FS_IN)+'<span>'+T(on?'Salir':'Con chat')+'</span>'; b.setAttribute('aria-label', T(on?'Salir de pantalla completa':'Pantalla completa con chat')); fsPeek(); }
 function fsPeek(){ const b=$('fsBtn'); b.classList.remove('compact'); clearTimeout(fsPeek._t); fsPeek._t=setTimeout(()=>b.classList.add('compact'), 4000); }
