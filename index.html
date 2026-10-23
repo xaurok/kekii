@@ -598,10 +598,10 @@ main.snap{transition:transform .22s ease-out}
     <div id="sendAs" hidden></div>
     <div id="mentionBar" hidden></div>
     <div id="replyBar" hidden><span></span><button type="button" class="iconBtn" id="replyCancel" aria-label="Cancelar respuesta">✕</button></div>
-    <form id="send" autocomplete="off">
+    <form id="send">
       <button type="button" id="emBtn" title="Emotes">☺</button>
       <button type="button" id="pointsBtn" title="Puntos de canal y Bits" aria-label="Puntos de canal y Bits"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4 10l8 11 8-11z"/><path d="M4 10h16M12 3l-3 7 3 11 3-11z"/></svg></button>
-      <input id="text" type="text" aria-autocomplete="none" placeholder="Inicia sesión para escribir" autocomplete="off" autocorrect="on" spellcheck="true" enterkeyhint="send" data-form-type="other" disabled>
+      <input id="text" placeholder="Inicia sesión para escribir" autocomplete="off" enterkeyhint="send" disabled>
       <button type="button" id="loginChat" hidden>Inicia sesión para escribir</button>
       <button class="primary" id="sendBtn" disabled>Enviar</button>
     </form>
@@ -619,7 +619,7 @@ main.snap{transition:transform .22s ease-out}
     <button class="tab" role="tab" id="tabMe" type="button">Menciones<span class="tbadge" id="tbMe" hidden></span></button>
   </div>
   <div id="actBody"></div>
-  <form id="whForm" hidden autocomplete="off"><input id="whText" aria-autocomplete="none" placeholder="Enviar susurro" autocomplete="off" maxlength="500"><button class="primary" type="submit">Enviar</button></form>
+  <form id="whForm" hidden><input id="whText" placeholder="Enviar susurro" autocomplete="off" maxlength="500"><button class="primary" type="submit">Enviar</button></form>
 </div>
 <div id="clipViewer" hidden role="dialog" aria-label="Clips">
   <button id="clipClose" type="button" aria-label="Cerrar clips"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
