@@ -107,6 +107,9 @@ form,#send{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
 #loginChat:hover{border-color:var(--accent)}
 #picker{display:none;flex-direction:column;border-top:1px solid var(--line);max-height:min(300px,45vh);min-height:0;flex-shrink:1;overflow:hidden}
 #picker.open{display:flex}
+/* Buscando emotes con el teclado abierto: el chat deja todo su sitio al panel */
+body.emSearching #chat,body.emSearching #paused,body.emSearching #sendAs,body.emSearching #mentionBar,body.emSearching #replyBar,body.emSearching #send,body.emSearching #statusBar,body.emSearching #pipBanner{display:none!important}
+body.emSearching #picker{max-height:none;flex:1 1 auto}
 .emHead{display:flex;gap:6px;padding:8px 8px 4px}
 #emSearch{flex:1;padding:7px 10px}
 #emList{overflow-y:auto;padding:0 6px 8px;min-height:0;position:relative}
@@ -649,7 +652,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -1183,7 +1186,8 @@ function emCell(n,e){
   const b=document.createElement('button'); b.type='button'; b.className='emCell'; b.title=n;
   const i=document.createElement('img'); i.src=e.url; i.alt=n; i.loading='lazy';
   const l=document.createElement('span'); l.textContent=n;
-  b.append(i,l); b.onclick=()=>{ useEmote(n); if(!$('emSearch').value) renderPicker(); };
+  b.append(i,l); b.onclick=()=>{ useEmote(n); if(!$('emSearch').value) renderPicker();
+    else if(document.body.classList.contains('emSearching')) toast(n+' · '+T('añadido al mensaje')); };
   return b;
 }
 function emSection(list, title, out){
@@ -1233,6 +1237,10 @@ $('emBtn').onclick = ()=>{
 function mobileKb(){ return matchMedia('(pointer:coarse)').matches; }
 $('text').addEventListener('focus', ()=>{ if(mobileKb()) $('picker').classList.remove('open'); });
 $('emSearch').addEventListener('input', renderPicker);
+$('emSearch').addEventListener('focus', ()=>{ if(mobileKb()) document.body.classList.add('emSearching'); });
+$('emSearch').addEventListener('blur', ()=>document.body.classList.remove('emSearching'));
+// Tocar un emote mientras buscas no cierra el teclado (y así el panel no salta de tamaño bajo el dedo)
+$('emList').addEventListener('pointerdown', e=>{ if(document.activeElement===$('emSearch') && e.target.closest('.emCell')) e.preventDefault(); });
 // Deslizar hacia abajo para cerrar el panel de emotes (desde arriba, o desde la lista si ya está arriba del todo)
 (()=>{
   const pk=$('picker'); let y0=null, x0=0, dy=0, t0=0, drag=false;
