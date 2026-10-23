@@ -1349,6 +1349,8 @@ $('emSearch').addEventListener('keydown', e=>{
 // ---------- Chat rendering ----------
 const chatEl = $('chat'); let stick = true;
 chatEl.addEventListener('scroll',()=>{
+  // Con el chat oculto (inicio, ventana pequeña) el navegador lo «desplaza» arriba: eso no es que lo hayas pausado tú
+  if(!chatEl.clientHeight) return;
   stick = chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
   $('paused').style.display = stick ? 'none' : 'block';
 });
@@ -1597,7 +1599,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  pushQ=[]; chatEmUse=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  pushQ=[]; chatEmUse=[]; stick=true; $('paused').style.display='none'; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
