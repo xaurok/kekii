@@ -101,6 +101,8 @@ body.headerHidden header{display:none}
 #paused{display:none;text-align:center;font-size:13px;padding:4px;background:var(--accent);color:var(--accent-fg);cursor:pointer}
 form{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
 #text{flex:1}
+#loginChat{flex:1;min-width:0;text-align:left;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--accent);font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#loginChat:hover{border-color:var(--accent)}
 #picker{display:none;flex-direction:column;border-top:1px solid var(--line);max-height:min(300px,45vh)}
 #picker.open{display:flex}
 .emHead{display:flex;gap:6px;padding:8px 8px 4px}
@@ -588,6 +590,7 @@ main.snap{transition:transform .22s ease-out}
       <button type="button" id="emBtn" title="Emotes">☺</button>
       <button type="button" id="pointsBtn" title="Puntos de canal y Bits" aria-label="Puntos de canal y Bits"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4 10l8 11 8-11z"/><path d="M4 10h16M12 3l-3 7 3 11 3-11z"/></svg></button>
       <input id="text" type="text" name="kekii-chat-msg" placeholder="Inicia sesión para escribir" autocomplete="off" autocorrect="on" spellcheck="true" enterkeyhint="send" data-form-type="other" disabled>
+      <button type="button" id="loginChat" hidden>Inicia sesión para escribir</button>
       <button class="primary" id="sendBtn" disabled>Enviar</button>
     </form>
   </div>
@@ -866,9 +869,13 @@ async function validate(){
       const d = (await u.json()).data[0]; me.name = d.display_name; showUser(d.display_name, d.profile_image_url);
     }catch(e){}
     $('text').disabled = $('sendBtn').disabled = false; $('text').placeholder = 'Enviar mensaje';
+    $('text').hidden = $('sendBtn').hidden = false; $('loginChat').hidden = true;
   }catch(e){ token = null; store.set('tw_token', null); }
 }
-function showGuest(){ const w=$('who'); w.className='guest'; w.hidden=false; w.title='Iniciar sesión'; w.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'; $('loginBtn').hidden=true; }
+function showGuest(){ const w=$('who'); w.className='guest'; w.hidden=false; w.title='Iniciar sesión'; w.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'; $('loginBtn').hidden=true;
+  // En el recuadro del chat, un botón que lleva directo a iniciar sesión
+  $('text').hidden=true; $('sendBtn').hidden=true; $('loginChat').hidden=false; }
+$('loginChat').onclick=()=>goLogin();
 // Menú de tu cuenta al tocar tu foto (o el icono por defecto si no has iniciado sesión)
 $('who').onclick = ()=>{
   closeSheet();
