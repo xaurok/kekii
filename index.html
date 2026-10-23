@@ -1200,6 +1200,32 @@ $('emBtn').onclick = ()=>{
   if(open){ $('emSearch').value=''; renderPicker(); }
 };
 $('emSearch').addEventListener('input', renderPicker);
+// Deslizar hacia abajo para cerrar el panel de emotes (desde arriba, o desde la lista si ya está arriba del todo)
+(()=>{
+  const pk=$('picker'); let y0=null, x0=0, dy=0, t0=0, drag=false;
+  pk.addEventListener('touchstart', e=>{
+    if(e.touches.length!==1){ y0=null; return; }
+    const inList=e.target.closest('#emList'), inRail=e.target.closest('.subsRail');
+    if(inRail || (inList && $('emList').scrollTop>0)){ y0=null; return; }
+    y0=e.touches[0].clientY; x0=e.touches[0].clientX; dy=0; t0=Date.now(); drag=false;
+  }, {passive:true});
+  pk.addEventListener('touchmove', e=>{
+    if(y0===null) return;
+    const d=e.touches[0].clientY-y0, dx=e.touches[0].clientX-x0;
+    if(!drag){ if(Math.abs(dx)>Math.abs(d) || d<-4){ y0=null; return; } if(d<10) return; drag=true; pk.style.transition='none'; $('emSearch').blur(); }
+    dy=Math.max(0,d); pk.style.transform='translateY('+dy+'px)'; pk.style.opacity=String(Math.max(.3,1-dy/260));
+    if(e.cancelable) e.preventDefault();
+  }, {passive:false});
+  const end=()=>{
+    if(y0===null) return; y0=null; if(!drag) return;
+    const fast = dy>30 && (Date.now()-t0)<250;
+    pk.style.transition='transform .18s ease, opacity .18s ease';
+    if(dy>70 || fast){ pk.style.transform='translateY(100%)'; pk.style.opacity='0';
+      setTimeout(()=>{ pk.classList.remove('open'); pk.style.transition=pk.style.transform=pk.style.opacity=''; }, 180); }
+    else { pk.style.transform=''; pk.style.opacity=''; setTimeout(()=>{ pk.style.transition=''; }, 200); }
+  };
+  pk.addEventListener('touchend', end); pk.addEventListener('touchcancel', end);
+})();
 $('emSearch').addEventListener('keydown', e=>{
   if(e.key==='Enter'){ e.preventDefault(); const first=$('emList').querySelector('.emCell'); if(first) first.click(); $('emSearch').value=''; renderPicker(); }
   if(e.key==='Escape') $('picker').classList.remove('open');
