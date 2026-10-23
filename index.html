@@ -78,7 +78,7 @@ main{flex:1;display:flex;min-height:0}
 /* Capa invisible sobre el vídeo (menos la barra de controles de abajo) para no abrir Twitch sin querer al tocar el título o los botones */
 #tapShield{display:none;position:absolute;left:0;right:0;top:0;bottom:56px;z-index:3;-webkit-tap-highlight-color:transparent}
 body.watching:not(.mini) #tapShield{display:block}
-body.noShieldTmp #tapShield{display:none!important}
+body.noShieldTmp #tapShield,body.noShield #tapShield{display:none!important}
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line)}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2299,7 +2299,7 @@ addEventListener('keydown', ()=>{ startGesture=Date.now(); }, true);
 function createPlayer(c){
   // El directo espera a tu toque en el play del reproductor (los que arrancan solos se pausan al
   // cambiar de tamaño). Al empezar, si va por detrás, saltamos solos al momento actual.
-  const slot=$('playerSlot'); slot.innerHTML=''; tPlayer=null;
+  const slot=$('playerSlot'); slot.innerHTML=''; tPlayer=null; document.body.classList.remove('noShield');
   const createdAt=Date.now(); let firstPlay=true;
   // Consejo de la ventana flotante: al empezar a reproducir o, si el reproductor no avisa, a los 20 s de abrir el canal
   let tipped=false; const tip=()=>{ if(tipped || c!==channel) return; tipped=true; maybeShowPipTip(); };
@@ -2315,7 +2315,7 @@ function createPlayer(c){
       try{ tPlayer=new Twitch.Player('playerSlot',{channel:c, parent:[location.hostname], width:'100%', height:'100%', muted:false, autoplay:false}); }
       finally{ document.createElement=origCreate; }
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
-        if(document.body.classList.contains('noShieldTmp')) setTimeout(()=>document.body.classList.remove('noShieldTmp'), 1500);
+        if(document.body.classList.contains('noShieldTmp')){ clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 1500); }
         if(!firstPlay || c!==channel) return; firstPlay=false;
         setTimeout(tip, 4000);
         // Comprobamos el retraso un momento después de empezar y, si hace falta, saltamos al directo
@@ -2326,17 +2326,25 @@ function createPlayer(c){
           if((lag!=null && lag>4) || (lag==null && waited>8)) jumpLive(true);
         }, 1500);
       });
+      // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
+      if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
+        if(c!==channel || Date.now()-shieldBackAt>4000) return;
+        shieldBackAt=0; document.body.classList.add('noShield');
+        [100, 700, 1500, 2500].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
+      });
     }catch(e){ tPlayer=null; fallback(); }
   };
   if(window.Twitch && Twitch.Player) make();
   else { let n=0; const t=setInterval(()=>{ if((window.Twitch && Twitch.Player) || ++n>30){ clearInterval(t); make(); } },100); }
 }
+let shieldBackAt=0;
+function shieldBack(){ if(!document.body.classList.contains('noShieldTmp')) return; document.body.classList.remove('noShieldTmp'); shieldBackAt=Date.now(); }
 // Saltar al momento actual: Twitch solo recarga el canal si está pausado
 function jumpLive(silent){
   if(!tPlayer){ if(channel) createPlayer(channel); return; }
   if(!silent) toast('Saltando al directo…');
   // El reproductor de Twitch no se reanuda solo si hay algo encima del vídeo: quitamos la capa unos segundos
-  document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); jumpLive._t=setTimeout(()=>document.body.classList.remove('noShieldTmp'), 7000);
+  document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 7000);
   try{ tPlayer.pause(); }catch(e){}
   setTimeout(()=>{ try{ tPlayer.setChannel(channel); }catch(e){} }, 250);
   [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
