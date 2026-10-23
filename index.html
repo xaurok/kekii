@@ -506,7 +506,8 @@ body:not(.watching) #pipBanner{display:none}
 #mentionBar::-webkit-scrollbar{display:none}
 #mentionBar[hidden]{display:none}
 .mSug{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--field);font-weight:700;font-size:14px}
-.mSug.first{border-color:var(--accent)}
+/* El borde marca la sugerencia que se elige con Enter/Tab: solo tiene sentido con teclado y ratón */
+@media (hover:hover) and (pointer:fine){.mSug.first{border-color:var(--accent)}}
 .mSug .at{color:var(--muted);font-weight:400}
 .mSug.em{padding:4px 12px 4px 6px}
 .mSug.em img{height:28px;width:auto;max-width:56px;object-fit:contain}
