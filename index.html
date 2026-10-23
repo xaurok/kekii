@@ -1728,6 +1728,8 @@ chIn.addEventListener('keydown', e=>{
 
 function sendChat(){
   const t=$('text').value.trim();
+  if(t==='/diag'){ DIAG=!DIAG; try{ localStorage.setItem('tw_diag', DIAG?'1':''); }catch(e){} $('text').value='';
+    sys(DIAG?'Modo diagnóstico activado: entra de nuevo en el canal y pulsa ⏭. Escribe /diag otra vez para quitarlo.':'Modo diagnóstico desactivado.'); return; }
   if(!t || !ws || ws.readyState!==1 || !token) return;
   if(replyTo){ ws.send(`@reply-parent-msg-id=${replyTo.id} PRIVMSG #${channel} :${t}`); }
   else ws.send(`PRIVMSG #${channel} :${t}`);
@@ -2479,6 +2481,16 @@ document.addEventListener('fullscreenchange', onFsChange); document.addEventList
 $('fsBtn').onclick=e=>{ e.stopPropagation(); toggleFsChat(); };
 $('fsBarBtn').onclick=()=>toggleFsChat();
 fsUi();
+// ---------- Modo diagnóstico (escribe /diag en el chat): apunta en el chat lo que hace el reproductor ----------
+let DIAG=false; try{ DIAG=localStorage.getItem('tw_diag')==='1'; }catch(e){}
+const diagT0=Date.now();
+function diag(msg){ if(!DIAG) return; const t=((Date.now()-diagT0)/1000).toFixed(1); const d=document.createElement('div'); d.className='msg sys'; d.style.cssText='font-family:monospace;font-size:11px;font-style:normal;color:#9fe';
+  d.textContent='['+t+'] '+msg; push(d); }
+function diagCover(){ // qué hay encima del vídeo (fuera del propio iframe)
+  const v=$('playerWrap').getBoundingClientRect(); const out=new Set();
+  [[.1,.1],[.5,.1],[.9,.1],[.5,.5],[.1,.9],[.9,.9]].forEach(([fx,fy])=>{ const x=v.left+v.width*fx, y=v.top+v.height*fy;
+    const e=document.elementFromPoint(x,y); if(e && e.tagName!=='IFRAME') out.add((e.id?'#'+e.id:e.tagName.toLowerCase()+(e.className&&typeof e.className==='string'?'.'+e.className.split(' ')[0]:''))); });
+  return out.size ? [...out].join(' ') : 'nada'; }
 // En el ordenador el directo arranca solo; en el móvil espera a tu toque (si arranca solo, se pausa al cambiar de tamaño)
 function autoStart(){ return !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !(/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints>1); }
 // Reproductor con la API oficial de Twitch, para poder reanudarlo si se pausa solo
@@ -2503,6 +2515,7 @@ function createPlayer(c){
         if(String(tag).toLowerCase()==='iframe') el.setAttribute('allow','autoplay; fullscreen; picture-in-picture'); return el; };
       try{ tPlayer=new Twitch.Player('playerSlot',{channel:c, parent:[location.hostname], width:'100%', height:'100%', muted:false, autoplay:autoStart()}); }
       finally{ document.createElement=origCreate; }
+      if(DIAG) ['READY','PLAY','PLAYING','PAUSE','ENDED','ONLINE','OFFLINE','PLAYBACK_BLOCKED','SEEK'].forEach(k=>{ if(Twitch.Player[k]) tPlayer.addEventListener(Twitch.Player[k], ()=>diag('evento '+k+' · encima: '+diagCover()+' · clases: '+['noShieldTmp','noShield','fsChat'].filter(c=>document.body.classList.contains(c)).join(',')+' · '+(matchMedia('(orientation:landscape)').matches?'horizontal':'vertical'))); });
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
         if(document.body.classList.contains('noShieldTmp')){ clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 1500); }
         if(!firstPlay || c!==channel) return; firstPlay=false;
@@ -2518,7 +2531,7 @@ function createPlayer(c){
       // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
       if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
         if(c!==channel || Date.now()-shieldBackAt>8000) return;
-        shieldBackAt=0; document.body.classList.add('noShield');
+        shieldBackAt=0; document.body.classList.add('noShield'); diag('Twitch pausó al volver la capa → la quito y reanudo');
         [100, 700, 1500, 2500].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
       });
     }catch(e){ tPlayer=null; fallback(); }
@@ -2527,16 +2540,17 @@ function createPlayer(c){
   else { let n=0; const t=setInterval(()=>{ if((window.Twitch && Twitch.Player) || ++n>30){ clearInterval(t); make(); } },100); }
 }
 let shieldBackAt=0;
-function shieldBack(){ if(!document.body.classList.contains('noShieldTmp')) return; document.body.classList.remove('noShieldTmp'); shieldBackAt=Date.now(); }
+function shieldBack(){ if(!document.body.classList.contains('noShieldTmp')) return; document.body.classList.remove('noShieldTmp'); shieldBackAt=Date.now(); diag('vuelven capa y botón'); }
 // Saltar al momento actual: Twitch solo recarga el canal si está pausado
 function jumpLive(silent){
   if(!tPlayer){ if(channel) createPlayer(channel); return; }
+  diag('⏭ salto '+(silent?'automático':'manual')+' · encima: '+diagCover());
   if(!silent) toast('Saltando al directo…');
   // El reproductor de Twitch no se reanuda solo si hay algo encima del vídeo: quitamos la capa unos segundos
   document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 7000);
   try{ tPlayer.pause(); }catch(e){}
   setTimeout(()=>{ try{ tPlayer.setChannel(channel); }catch(e){} }, 250);
-  [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
+  [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()){ diag('reintento play ('+ms+' ms) · encima: '+diagCover()); tPlayer.play(); } }catch(e){} }, ms));
   // Si el navegador no deja reanudarlo solo, avisamos en vez de dejarlo parado sin más
   setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) toast(T('Toca ▶ para continuar el directo')); }catch(e){} }, 6800);
 }
