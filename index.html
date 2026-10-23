@@ -119,6 +119,8 @@ body.fsChat #fsBtn svg{color:#fff}
 #chatResize{display:none;position:absolute;left:-6px;top:0;bottom:0;width:12px;z-index:7;cursor:col-resize;touch-action:none}
 #chatResize::after{content:"";position:absolute;left:5px;top:0;bottom:0;width:2px;background:transparent;transition:background .15s}
 #chatResize:hover::after,body.chatResizing #chatResize::after{background:var(--accent)}
+body.chatSnap #chatResize::after{background:#fff;box-shadow:0 0 8px var(--accent)}
+body.chatSnap #chatResize::before{background:var(--accent)}
 body.chatResizing #playerWrap iframe{pointer-events:none}
 body.chatResizing{cursor:col-resize;user-select:none}
 @media (min-width:821px){ body.watching #chatResize{display:block} }
@@ -2556,8 +2558,19 @@ function applyChatW(w, save){
     e.preventDefault(); h.setPointerCapture(e.pointerId); startX=e.clientX; startW=chatInnerW();
     document.body.classList.add('chatResizing');
   });
-  h.addEventListener('pointermove', e=>{ if(!document.body.classList.contains('chatResizing')) return; applyChatW(startW+(startX-e.clientX)); });
-  const end=e=>{ if(!document.body.classList.contains('chatResizing')) return; document.body.classList.remove('chatResizing');
+  // Imán: cerca del ancho en el que el vídeo (16:9) encaja sin barras negras, el borde se engancha ahí
+  let snapped=false;
+  const fitW=()=>{ const pw=$('playerWrap'), cc=$('chatCol'); const total=pw.getBoundingClientRect().width+cc.getBoundingClientRect().width;
+    const padL=parseFloat(getComputedStyle(pw).paddingLeft)||0, padR=parseFloat(getComputedStyle(cc).paddingRight)||0;
+    return total-padL-padR-pw.clientHeight*16/9; };
+  h.addEventListener('pointermove', e=>{ if(!document.body.classList.contains('chatResizing')) return;
+    let w=startW+(startX-e.clientX); const f=fitW(), {min,max}=chatWLimits();
+    const near=f>=min && f<=max && Math.abs(w-f)<22;
+    if(near) w=f;
+    if(near && !snapped){ try{ navigator.vibrate && navigator.vibrate(12); }catch(err){} }
+    snapped=near; document.body.classList.toggle('chatSnap', near);
+    applyChatW(w); });
+  const end=e=>{ if(!document.body.classList.contains('chatResizing')) return; document.body.classList.remove('chatResizing','chatSnap'); snapped=false;
     // Doble clic (solo con ratón) sin arrastrar: vuelve al ancho normal. En el móvil no, para no tocar mensajes sin querer
     if(Math.abs(e.clientX-startX)<5){ if(e.pointerType!=='mouse') return; if(Date.now()-lastTap<400){ applyChatW(null, true); lastTap=0; keepPlaying(); return; } lastTap=Date.now(); return; }
     lastTap=0; applyChatW(chatInnerW(), true); keepPlaying(); };
