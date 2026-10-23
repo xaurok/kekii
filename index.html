@@ -159,7 +159,10 @@ code{font-size:12px;background:var(--bg);padding:1px 4px;border-radius:4px}
 @media (orientation:landscape) and (max-height:560px){
   main{flex-direction:row}
   #playerWrap{flex:1;aspect-ratio:auto;height:100%;width:auto}
-  #chatCol{width:var(--chatW,min(340px,42vw));flex:none;border-left:1px solid var(--line)}
+  #chatCol{width:calc(var(--chatW,min(340px,42vw)) + env(safe-area-inset-right,0px));flex:none;border-left:1px solid var(--line);padding-right:env(safe-area-inset-right,0px)}
+  /* La zona de la cámara frontal (muesca) se rellena con el vídeo o el chat, no con una franja negra */
+  body.watching{padding-left:0;padding-right:0}
+  body.watching #playerWrap{padding-left:env(safe-area-inset-left,0px)}
   body.watching #chatResize{display:block;left:-22px;width:40px}
   #chatResize::after{left:21px}
   #chatResize::before{content:"";position:absolute;left:18px;top:50%;width:6px;height:48px;margin-top:-24px;border-radius:3px;background:rgba(255,255,255,.45)}
@@ -2491,6 +2494,7 @@ function keepPlaying(){
   [250, 800, 1600, 3000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused() && channel) tPlayer.play(); }catch(e){} }, ms));
 }
 // ---------- Ancho del chat ajustable (PC y horizontal); el vídeo nunca baja de ~400 px (mínimo de Twitch) ----------
+function chatInnerW(){ const c=$('chatCol'); return c.getBoundingClientRect().width-(parseFloat(getComputedStyle(c).paddingRight)||0); }
 function chatWLimits(){ return {min:240, max:Math.max(240, innerWidth-400)}; }
 function applyChatW(w, save){
   const r=document.documentElement.style;
@@ -2503,14 +2507,14 @@ function applyChatW(w, save){
   { const sw=+store.get('tw_chat_w'); if(sw) applyChatW(sw); }
   addEventListener('resize', ()=>{ const sw=+store.get('tw_chat_w'); if(sw) applyChatW(sw); });
   h.addEventListener('pointerdown', e=>{
-    e.preventDefault(); h.setPointerCapture(e.pointerId); startX=e.clientX; startW=$('chatCol').getBoundingClientRect().width;
+    e.preventDefault(); h.setPointerCapture(e.pointerId); startX=e.clientX; startW=chatInnerW();
     document.body.classList.add('chatResizing');
   });
   h.addEventListener('pointermove', e=>{ if(!document.body.classList.contains('chatResizing')) return; applyChatW(startW+(startX-e.clientX)); });
   const end=e=>{ if(!document.body.classList.contains('chatResizing')) return; document.body.classList.remove('chatResizing');
     // Doble clic (solo con ratón) sin arrastrar: vuelve al ancho normal. En el móvil no, para no tocar mensajes sin querer
     if(Math.abs(e.clientX-startX)<5){ if(e.pointerType!=='mouse') return; if(Date.now()-lastTap<400){ applyChatW(null, true); lastTap=0; keepPlaying(); return; } lastTap=Date.now(); return; }
-    lastTap=0; applyChatW($('chatCol').getBoundingClientRect().width, true); keepPlaying(); };
+    lastTap=0; applyChatW(chatInnerW(), true); keepPlaying(); };
   h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
 })();
 function setMiniScale(){ const w=$('playerWrap').clientWidth; if(w) document.documentElement.style.setProperty('--miniScale', String(w/480)); }
