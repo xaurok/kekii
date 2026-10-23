@@ -3040,6 +3040,7 @@ function updateMentions(){
   hits=hits.slice(0,15);
   bar.textContent='';
   if(!hits.length){ bar.hidden=true; return; }
+  $('picker').classList.remove('open'); // panel de emotes y sugerencias no caben juntos con el teclado
   hits.forEach((h,i)=>{
     const b=document.createElement('button'); b.type='button'; b.className='mSug'+(i===0?' first':'');
     const at=document.createElement('span'); at.className='at'; at.textContent='@';
