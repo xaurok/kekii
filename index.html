@@ -160,8 +160,9 @@ code{font-size:12px;background:var(--bg);padding:1px 4px;border-radius:4px}
   main{flex-direction:row}
   #playerWrap{flex:1;aspect-ratio:auto;height:100%;width:auto}
   #chatCol{width:var(--chatW,min(340px,42vw));flex:none;border-left:1px solid var(--line)}
-  body.watching #chatResize{display:block;left:-10px;width:20px}
-  #chatResize::before{content:"";position:absolute;left:8px;top:50%;width:4px;height:36px;margin-top:-18px;border-radius:2px;background:rgba(255,255,255,.35)}
+  body.watching #chatResize{display:block;left:-22px;width:40px}
+  #chatResize::after{left:21px}
+  #chatResize::before{content:"";position:absolute;left:18px;top:50%;width:6px;height:48px;margin-top:-24px;border-radius:3px;background:rgba(255,255,255,.45)}
   body.chatHidden #chatResize{display:none}
   body.chatHidden #chatCol{display:none}
   #chatToggle{display:flex}
@@ -2507,8 +2508,8 @@ function applyChatW(w, save){
   });
   h.addEventListener('pointermove', e=>{ if(!document.body.classList.contains('chatResizing')) return; applyChatW(startW+(startX-e.clientX)); });
   const end=e=>{ if(!document.body.classList.contains('chatResizing')) return; document.body.classList.remove('chatResizing');
-    // Dos toques seguidos sin arrastrar: vuelve al ancho normal
-    if(Math.abs(e.clientX-startX)<5){ if(Date.now()-lastTap<400){ applyChatW(null, true); lastTap=0; keepPlaying(); return; } lastTap=Date.now(); return; }
+    // Doble clic (solo con ratón) sin arrastrar: vuelve al ancho normal. En el móvil no, para no tocar mensajes sin querer
+    if(Math.abs(e.clientX-startX)<5){ if(e.pointerType!=='mouse') return; if(Date.now()-lastTap<400){ applyChatW(null, true); lastTap=0; keepPlaying(); return; } lastTap=Date.now(); return; }
     lastTap=0; applyChatW($('chatCol').getBoundingClientRect().width, true); keepPlaying(); };
   h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
 })();
