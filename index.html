@@ -78,6 +78,8 @@ main{flex:1;display:flex;min-height:0}
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line)}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sleepBtn.on{color:var(--accent)}
+#sleepLeft{font-size:12px;font-weight:700}#sleepLeft:empty{display:none}
 .iconBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 8px;border-radius:8px;border:0;background:none;color:var(--fg);font-size:13px}
 .iconBtn:hover{background:var(--field)}
 #hideChatBtn{display:none}
@@ -566,7 +568,7 @@ main.snap{transition:transform .22s ease-out}
       <button class="iconBtn" id="chattersBtn" type="button" aria-label="Usuarios del chat" title="Usuarios del chat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.2c2.4.1 4.4 1.7 5 4.8"/></svg></button>
       <button class="iconBtn actBtn" type="button" aria-label="Actividad"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></svg><span class="actBadge" hidden></span></button>
       <button class="iconBtn" id="homeBtn" type="button" aria-label="Inicio"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></button>
-      <button class="iconBtn" id="searchToggle" type="button" aria-label="Buscar canal"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <button class="iconBtn" id="sleepBtn" type="button" aria-label="Temporizador de apagado" title="Temporizador de apagado"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><span id="sleepLeft"></span></button>
       <button class="iconBtn" id="hideChatBtn" type="button" aria-label="Ocultar chat">Ocultar <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
     </div>
     <div id="chanMore" hidden><div id="chanTitle"></div><div id="chanTags"></div></div>
@@ -872,7 +874,7 @@ $('who').onclick = ()=>{
     const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent='Iniciar sesión con Twitch'; b.onclick=goLogin;
     acts.appendChild(b); sh.append(h,p,acts);
     if(!isInstalled()){ const bi=document.createElement('button'); bi.type='button'; bi.textContent='Instalar Kekii como app'; bi.style.cssText='width:100%;margin-top:8px;padding:11px;border-radius:10px;font-weight:700'; bi.onclick=openInstallGuide; sh.appendChild(bi); }
-    sh.appendChild(sleepButton()); sh.appendChild(pipButton()); sh.appendChild(reportButton()); sh.appendChild(aboutButton()); sh.appendChild(langPicker()); sh.appendChild(legalNote());
+    sh.appendChild(pipButton()); sh.appendChild(reportButton()); sh.appendChild(aboutButton()); sh.appendChild(langPicker()); sh.appendChild(legalNote());
     return;
   }
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -886,7 +888,6 @@ $('who').onclick = ()=>{
   const b2=document.createElement('button'); b2.type='button'; b2.textContent='Cerrar sesión'; b2.style.color='#ff6b6b';
   b2.onclick=()=>{ store.set('tw_token',null); store.set('tw_login',null); location.reload(); };
   acts.append(b1,b2); sh.appendChild(acts);
-  sh.appendChild(sleepButton());
   sh.appendChild(pipButton());
   sh.appendChild(reportButton());
   sh.appendChild(aboutButton());
@@ -1419,10 +1420,6 @@ function start(push=true, fromPop=false){
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
-$('searchToggle').onclick = ()=>{
-  const hidden = document.body.classList.toggle('headerHidden');
-  if(!hidden){ $('channel').select(); $('channel').focus(); }
-};
 $('channel').addEventListener('keydown', e=>{ if(e.key==='Escape' && channel) document.body.classList.add('headerHidden'); });
 // Chat en horizontal
 function setChatHidden(h){ document.body.classList.toggle('chatHidden', h); store.set('tw_chat_hidden', h?'1':null); if(!h && stick) chatEl.scrollTop = chatEl.scrollHeight; }
@@ -2334,6 +2331,7 @@ function stopStream(){
   const wrap=$('playerWrap'); wrap.style.left=wrap.style.top=wrap.style.right=wrap.style.bottom='';
 }
 $('miniClose').addEventListener('click', e=>{ e.stopPropagation(); stopStream(); });
+$('sleepBtn').addEventListener('click', e=>{ e.stopPropagation(); openSleepTimer(); });
 // Teclado del móvil: si el navegador no encoge la página, la ajustamos al hueco visible para que no tape la caja de escribir
 if(window.visualViewport){
   const vv=window.visualViewport;
@@ -2937,13 +2935,14 @@ function openPipGuide(){
 let sleepAt=0;
 function sleepLeft(){ return sleepAt ? Math.max(0, Math.ceil((sleepAt-Date.now())/60000)) : 0; }
 function sleepFire(){
-  sleepAt=0; let paused=false;
+  sleepAt=0; setTimeout(sleepUi,0); let paused=false;
   try{ if(tPlayer){ tPlayer.pause(); paused=true; } }catch(e){}
   if(!paused){ const f=$('playerSlot').querySelector('iframe'); if(f) f.remove(); }
   if(channel) sys(T('Temporizador: el directo se ha parado.'));
   toast(T('Temporizador: el directo se ha parado.'));
 }
-function sleepCheck(){ if(sleepAt && Date.now()>=sleepAt) sleepFire(); }
+function sleepUi(){ const b=$('sleepBtn'); if(!b) return; const on=!!sleepAt; b.classList.toggle('on',on); $('sleepLeft').textContent = on ? sleepLeft()+"'" : ''; }
+function sleepCheck(){ if(sleepAt && Date.now()>=sleepAt) sleepFire(); sleepUi(); }
 setInterval(sleepCheck, 10000);
 document.addEventListener('visibilitychange', sleepCheck);
 function openSleepTimer(){
@@ -2955,10 +2954,10 @@ function openSleepTimer(){
   sh.append(h,p);
   const row=document.createElement('div'); row.className='sleepRow';
   [15,30,45,60,90,120].forEach(m=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=(m<60 || m%60)? m+' min' : (m/60)+' h';
-    b.onclick=()=>{ sleepAt=Date.now()+m*60000; closeSheet(); toast(T('El directo se parará en')+' '+b.textContent); }; row.appendChild(b); });
+    b.onclick=()=>{ sleepAt=Date.now()+m*60000; sleepUi(); closeSheet(); toast(T('El directo se parará en')+' '+b.textContent); }; row.appendChild(b); });
   sh.appendChild(row);
   const acts=document.createElement('div'); acts.className='acts'; acts.style.gridTemplateColumns='1fr';
-  if(sleepAt){ const off=document.createElement('button'); off.type='button'; off.textContent=T('Desactivar temporizador'); off.onclick=()=>{ sleepAt=0; closeSheet(); toast(T('Temporizador desactivado')); }; acts.appendChild(off); }
+  if(sleepAt){ const off=document.createElement('button'); off.type='button'; off.textContent=T('Desactivar temporizador'); off.onclick=()=>{ sleepAt=0; sleepUi(); closeSheet(); toast(T('Temporizador desactivado')); }; acts.appendChild(off); }
   else { const c=document.createElement('button'); c.type='button'; c.textContent=T('Cerrar'); c.onclick=closeSheet; acts.appendChild(c); }
   sh.appendChild(acts);
 }
