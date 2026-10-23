@@ -75,6 +75,9 @@ main{flex:1;display:flex;min-height:0}
 #playerWrap{flex:1;background:#000;min-width:0;display:flex;position:relative}
 #playerSlot{flex:1;display:flex}
 #playerSlot iframe{border:0;width:100%;height:100%}
+/* Capa invisible sobre el vídeo (menos la barra de controles de abajo) para no abrir Twitch sin querer al tocar el título o los botones */
+#tapShield{display:none;position:absolute;left:0;right:0;top:0;bottom:56px;z-index:3;-webkit-tap-highlight-color:transparent}
+body.watching:not(.mini) #tapShield{display:block}
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line)}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -556,7 +559,7 @@ main.snap{transition:transform .22s ease-out}
   </div>
 </section>
 <main>
-  <div id="playerWrap"><div id="playerSlot"></div>
+  <div id="playerWrap"><div id="playerSlot"></div><div id="tapShield" aria-hidden="true"></div>
     <div id="miniBar"><span id="miniName"></span><button id="miniClose" type="button" aria-label="Cerrar directo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <button id="chatToggle" type="button" aria-label="Mostrar chat"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10h.01M12 10h.01M15 10h.01" stroke-linecap="round" stroke-width="2.6"/></svg>Chat</button></div>
   <div id="chatCol">
@@ -630,7 +633,7 @@ const EN = {
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
  'Ir al directo':'Go live','Ir al momento actual del directo':'Jump to the live moment','Saltando al directo…':'Jumping to live…',
  'Mostrar u ocultar título y etiquetas':'Show or hide title and tags','Perfil del canal':'Channel profile','Ver perfil del canal':'View channel profile','Buscar canal ':'Search channel',
- 'Toca ▶ en el reproductor para empezar el directo.':'Tap ▶ on the player to start the stream.','El chat ha sido borrado por un moderador':'Chat was cleared by a moderator',
+ 'Toca ▶ abajo a la izquierda del reproductor para empezar el directo.':'Tap ▶ at the bottom left of the player to start the stream.','El chat ha sido borrado por un moderador':'Chat was cleared by a moderator',
  'Este canal no tiene emotes de 7TV':"This channel has no 7TV emotes",'No se pudieron cargar los emotes de 7TV':"Couldn't load 7TV emotes",
  'Mensajes anteriores · ahora en directo ↓':'Earlier messages · live now ↓','Mensaje destacado con puntos de canal':'Highlighted with channel points',
  'Canjeó una recompensa del canal':'Redeemed a channel reward','Nueva suscripción':'New subscription','Resuscripción':'Resubscription','Suscripción regalada':'Gifted subscription',
@@ -1453,7 +1456,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  pushQ=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  pushQ=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
