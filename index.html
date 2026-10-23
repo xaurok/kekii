@@ -78,7 +78,7 @@ main{flex:1;display:flex;min-height:0}
 /* Capa invisible sobre el vídeo (menos la barra de controles de abajo) para no abrir Twitch sin querer al tocar el título o los botones */
 #tapShield{display:none;position:absolute;left:0;right:0;top:0;bottom:56px;z-index:3;-webkit-tap-highlight-color:transparent}
 body.watching:not(.mini) #tapShield{display:block}
-body.noShieldTmp #tapShield,body.noShield #tapShield{display:none!important}
+body.noShieldTmp #tapShield,body.noShield #tapShield,html.desk #tapShield{display:none!important}
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line)}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3026,6 +3026,8 @@ function sleepButton(){ const b=document.createElement('button'); b.type='button
 
 // La ventanita flotante es cosa del móvil: en el ordenador el reproductor de Twitch ya trae la suya
 const IS_MOBILE=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints>1);
+// En el ordenador no hace falta la capa invisible sobre el vídeo (con ratón no se toca sin querer)
+if(!IS_MOBILE) document.documentElement.classList.add('desk');
 function pipButton(){ if(!IS_MOBILE) return document.createDocumentFragment(); const b=document.createElement('button'); b.type='button'; b.className='aboutLink'; b.textContent=T('Ver fuera de la app (ventana flotante)'); b.onclick=openPipGuide; return b; }
 function maybeShowPipTip(){
   // Aviso fijo encima del chat (en un chat rápido, un mensaje se perdería). Sale en cada directo
