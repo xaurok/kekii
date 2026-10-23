@@ -781,8 +781,8 @@ const EN_PATTERNS = [
  [/^desde (\d{4})$/, 'since $1'],
  [/^@(\S+) · cuenta creada el (.+)$/, '@$1 · account created on $2'],
  [/^@(\S+) · inicia sesión para ver más$/, '@$1 · log in to see more'],
- [/^Twitch no deja ver tu saldo ni canjear desde otras apps\. Ábrelo en Twitch para canjear recompensas de (.+) o hacer cheer con Bits; los cheers y canjes se verán aquí en el chat\.$/,
-   "Twitch doesn't let other apps see your balance or redeem. Open Twitch to redeem $1's rewards or cheer with Bits; cheers and redemptions will show up here in chat."],
+ [/^Twitch no deja ver tu saldo ni canjear desde otras apps\. Ábrelo en Twitch para canjear recompensas de (.+) o hacer cheer con Bits; los cheers y los canjes con mensaje se verán aquí en el chat\.$/,
+   "Twitch doesn't let other apps see your balance or redeem. Open Twitch to redeem $1's rewards or cheer with Bits; cheers and redemptions with a message will show up here in chat."],
  [/^Suscrito · nivel (\d)$/, 'Subscribed · tier $1'],
  [/^Tú: ([\s\S]*)$/, 'You: $1'],
  [/^(.+) · (\d+)$/, (m,a,b)=>tr(a)+' · '+b],
@@ -1064,7 +1064,7 @@ function openPointsSheet(){
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
   const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
   const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent='Puntos de canal y Bits';
-  const p=document.createElement('p'); p.className='bio'; p.textContent=T('Twitch no deja ver tu saldo ni canjear desde otras apps. Ábrelo en Twitch para canjear recompensas de '+((chan.user&&chan.user.display_name)||channel)+' o hacer cheer con Bits; los cheers y canjes se verán aquí en el chat.');
+  const p=document.createElement('p'); p.className='bio'; p.textContent=T('Twitch no deja ver tu saldo ni canjear desde otras apps. Ábrelo en Twitch para canjear recompensas de '+((chan.user&&chan.user.display_name)||channel)+' o hacer cheer con Bits; los cheers y los canjes con mensaje se verán aquí en el chat.');
   sh.append(h,p);
   const tiers=document.createElement('div'); tiers.className='cheerTiers';
   [1,100,1000,5000,10000].forEach(a=>{ const ti=tierImage(a); if(!ti || !ti.url) return; const d=document.createElement('div'); d.style.color=ti.color; const i=document.createElement('img'); i.src=ti.url; i.alt=''; d.append(i, String(a)); tiers.appendChild(d); });
