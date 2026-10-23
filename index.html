@@ -1571,7 +1571,7 @@ function start(push=true, fromPop=false){
   if(!c) return;
   if(c===channel && document.body.classList.contains('mini')){ expandMini(!fromPop && push); if(!fromPop && !push) history.replaceState({c}, '', BASE+c); return; }
   document.body.classList.remove('mini'); { const w=$('playerWrap'); w.style.left=w.style.top=w.style.right=w.style.bottom=''; }
-  channel = c; store.set('tw_channel', c); addRecent(c); fsPeek(); $('channel').value = c;
+  channel = c; store.set('tw_channel', c); addRecent(c); fsPeek(); window.checkForUpdate && checkForUpdate(); $('channel').value = c;
   document.body.classList.remove('homeView');
   if(!fromPop){ if(push && !document.body.classList.contains('watching')) history.pushState({c}, '', BASE + c); else history.replaceState({c}, '', BASE + c); }
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
@@ -1965,7 +1965,7 @@ function renderCatHead(){
 $('moreBtn').onclick=()=>loadHome(true);
 $('home').addEventListener('scroll',e=>{ const h=e.target; if(!$('moreBtn').hidden && h.scrollTop+h.clientHeight>h.scrollHeight-400) loadHome(true); });
 
-function showHome(push){
+function showHome(push){ window.checkForUpdate && checkForUpdate();
   // Si hay un directo abierto, sigue en una ventana pequeña mientras navegas
   if(channel && $('playerSlot').firstChild){ document.body.classList.remove('watching'); enterMini(); }
   else stopStream();
@@ -3438,12 +3438,14 @@ if('serviceWorker' in navigator){
     reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw) return;
       nw.addEventListener('statechange',()=>{ if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdateBanner(); }); });
     // Busca versiones nuevas al volver a la app o a la ventana (en el ordenador la pestaña suele quedarse
-    // abierta) y cada 10 minutos; como mucho una vez cada 10 segundos
+    // abierta) cada minuto mientras la usas y al cambiar de canal o volver al inicio; como mucho una vez cada 10 segundos
     let lastCheck=0;
     const check=()=>{ if(Date.now()-lastCheck<10000) return; lastCheck=Date.now(); reg.update().catch(()=>{}); };
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check(); });
     addEventListener('focus', check);
-    setInterval(check, 10*60*1000);
+    // Con la app abierta y a la vista, también cada minuto (descarga menos de 1 KB)
+    setInterval(()=>{ if(!document.hidden) check(); }, 60*1000);
+    window.checkForUpdate=check;
   }).catch(()=>{});
   let reloading=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!updateRequested || reloading) return; reloading=true; location.reload(); });
