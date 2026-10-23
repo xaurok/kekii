@@ -3023,7 +3023,10 @@ function applyEmoteSug(n){
 }
 function updateMentions(){
   const bar=$('mentionBar'); const mq=mentionQuery();
-  if(!mq && channel){ const eq=emoteQuery(); if(eq){ updateEmoteSug(eq); return; } }
+  if(!mq && channel){ const eq=emoteQuery(); if(eq){
+    // Con «:» las sugerencias sustituyen al panel de emotes (los dos juntos no caben con el teclado abierto)
+    $('picker').classList.remove('open');
+    updateEmoteSug(eq); return; } }
   if(!mq || !channel){ bar.hidden=true; return; }
   const list=[]; const seen=new Set();
   const push=(login,name,color,score)=>{ if(seen.has(login) || login===login0()) return; seen.add(login); list.push({login,name,color,score}); };
