@@ -508,6 +508,13 @@ body:not(.watching) #pipBanner{display:none}
 
 /* ---------- Sugerencias de @menciones ---------- */
 #mentionBar{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 2px;scrollbar-width:none}
+/* Con ratón no se puede deslizar de lado: en el ordenador estas filas pasan a varias líneas */
+@media (hover:hover) and (pointer:fine){
+  #mentionBar{flex-wrap:wrap;overflow-x:hidden;overflow-y:auto;max-height:96px}
+  #emTabs,#chanTags,.chips,.tabs{flex-wrap:wrap;overflow-x:visible}
+  #emTabs{row-gap:6px}
+  .chips{row-gap:8px}
+}
 #mentionBar::-webkit-scrollbar{display:none}
 #mentionBar[hidden]{display:none}
 .mSug{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--field);font-weight:700;font-size:14px}
