@@ -1348,10 +1348,17 @@ $('emSearch').addEventListener('keydown', e=>{
 
 // ---------- Chat rendering ----------
 const chatEl = $('chat'); let stick = true;
+// El chat solo se «pausa» si lo mueves tú (dedo, rueda, barra o teclado). Los saltos de altura de imágenes o GIFs
+// que terminan de cargar, o el chat oculto en el inicio, no cuentan: en esos casos sigue pegado abajo.
+let userScrollAt=0;
+['touchstart','touchmove','wheel','pointerdown'].forEach(ev=>chatEl.addEventListener(ev, ()=>{ userScrollAt=Date.now(); }, {passive:true}));
+chatEl.addEventListener('keydown', ()=>{ userScrollAt=Date.now(); });
 chatEl.addEventListener('scroll',()=>{
-  // Con el chat oculto (inicio, ventana pequeña) el navegador lo «desplaza» arriba: eso no es que lo hayas pausado tú
   if(!chatEl.clientHeight) return;
-  stick = chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
+  const atBottom = chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
+  if(atBottom) stick=true;
+  else if(Date.now()-userScrollAt < 1500) stick=false;
+  else if(stick){ chatEl.scrollTop = chatEl.scrollHeight; return; }
   $('paused').style.display = stick ? 'none' : 'block';
 });
 $('paused').onclick = ()=>{ chatEl.scrollTop = chatEl.scrollHeight; };
