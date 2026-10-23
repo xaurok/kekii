@@ -78,6 +78,7 @@ main{flex:1;display:flex;min-height:0}
 /* Capa invisible sobre el vídeo (menos la barra de controles de abajo) para no abrir Twitch sin querer al tocar el título o los botones */
 #tapShield{display:none;position:absolute;left:0;right:0;top:0;bottom:56px;z-index:3;-webkit-tap-highlight-color:transparent}
 body.watching:not(.mini) #tapShield{display:block}
+.noShieldRoot #tapShield{display:none!important}
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line)}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -699,6 +700,7 @@ const EN = {
  "O abre el menú del navegador y elige <b>Instalar Kekii</b>.":"Or open the browser menu and choose <b>Install Kekii</b>.",
  'Usar en el chat':'Use in chat','Copiar nombre':'Copy name','Nombre copiado':'Name copied',
  '7TV · Emote del canal':'7TV · Channel emote','7TV · Emote global':'7TV · Global emote','BTTV · Emote del canal':'BTTV · Channel emote','BTTV · Emote global':'BTTV · Global emote','FFZ · Emote del canal':'FFZ · Channel emote','FFZ · Emote global':'FFZ · Global emote','Twitch · Emote del canal':'Twitch · Channel emote','Twitch · Emote global':'Twitch · Global emote','Twitch · De tus suscripciones':'Twitch · From your subscriptions',
+ 'Toca ▶ para continuar el directo':'Tap ▶ to resume the stream',
  'Otros':'Other','Conversación':'Conversation','Ver conversación':'View conversation','Mensaje original':'Original message','El mensaje original ya no está en el chat.':'The original message is no longer in the chat.',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
@@ -824,6 +826,8 @@ function langPicker(){
 }
 
 const $ = id => document.getElementById(id);
+// Prueba: kekii.app/?sincapa desactiva la capa invisible sobre el vídeo
+if(/[?&]sincapa\b/.test(location.search)) document.documentElement.classList.add('noShieldRoot');
 const store = {
   get(k){try{return localStorage.getItem(k)}catch(e){return null}},
   set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
@@ -2334,7 +2338,9 @@ function jumpLive(silent){
   if(!silent) toast('Saltando al directo…');
   try{ tPlayer.pause(); }catch(e){}
   setTimeout(()=>{ try{ tPlayer.setChannel(channel); }catch(e){} }, 250);
-  [900, 1800, 3000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
+  [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
+  // Si el navegador no deja reanudarlo solo, avisamos en vez de dejarlo parado sin más
+  setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) toast(T('Toca ▶ para continuar el directo')); }catch(e){} }, 6800);
 }
 // Al encoger o ampliar la ventana, Chrome puede pausar un vídeo que arrancó solo: lo reanudamos
 let lastResize=0, wasPausedBefore=false;
