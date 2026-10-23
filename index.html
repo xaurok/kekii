@@ -1521,7 +1521,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  pushQ=[]; chatEmUse=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  pushQ=[]; chatEmUse=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
@@ -2357,6 +2357,8 @@ addSwipe($('actBody'),
 
 
 // ---------- Minirreproductor ----------
+// En el ordenador el directo arranca solo; en el móvil espera a tu toque (si arranca solo, se pausa al cambiar de tamaño)
+function autoStart(){ return !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !(/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints>1); }
 // Reproductor con la API oficial de Twitch, para poder reanudarlo si se pausa solo
 let tPlayer=null, startGesture=0;
 addEventListener('pointerdown', ()=>{ startGesture=Date.now(); }, true);
@@ -2369,7 +2371,7 @@ function createPlayer(c){
   // Consejo de la ventana flotante: al empezar a reproducir o, si el reproductor no avisa, a los 20 s de abrir el canal
   let tipped=false; const tip=()=>{ if(tipped || c!==channel) return; tipped=true; maybeShowPipTip(); };
   setTimeout(tip, 20000);
-  const fallback=()=>{ slot.innerHTML=`<iframe allowfullscreen allow="autoplay; fullscreen; picture-in-picture" src="https://player.twitch.tv/?channel=${encodeURIComponent(c)}&parent=${location.hostname}&autoplay=false&muted=false"></iframe>`; };
+  const fallback=()=>{ slot.innerHTML=`<iframe allowfullscreen allow="autoplay; fullscreen; picture-in-picture" src="https://player.twitch.tv/?channel=${encodeURIComponent(c)}&parent=${location.hostname}&autoplay=${autoStart()}&muted=false"></iframe>`; };
   const make=()=>{
     if(c!==channel) return;
     if(!(window.Twitch && Twitch.Player)){ fallback(); return; }
@@ -2377,7 +2379,7 @@ function createPlayer(c){
       const origCreate=document.createElement;
       document.createElement=function(tag, ...rest){ const el=origCreate.call(document, tag, ...rest);
         if(String(tag).toLowerCase()==='iframe') el.setAttribute('allow','autoplay; fullscreen; picture-in-picture'); return el; };
-      try{ tPlayer=new Twitch.Player('playerSlot',{channel:c, parent:[location.hostname], width:'100%', height:'100%', muted:false, autoplay:false}); }
+      try{ tPlayer=new Twitch.Player('playerSlot',{channel:c, parent:[location.hostname], width:'100%', height:'100%', muted:false, autoplay:autoStart()}); }
       finally{ document.createElement=origCreate; }
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
         if(document.body.classList.contains('noShieldTmp')){ clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 1500); }
