@@ -99,7 +99,7 @@ body.headerHidden header{display:none}
 .em img{height:28px;display:block}
 .em img.zw{position:absolute;inset:0;margin:auto;height:28px}
 #paused{display:none;text-align:center;font-size:13px;padding:4px;background:var(--accent);color:var(--accent-fg);cursor:pointer}
-form{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
+form,#send{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
 #text{flex:1}
 #loginChat{flex:1;min-width:0;text-align:left;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--accent);font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #loginChat:hover{border-color:var(--accent)}
@@ -598,13 +598,14 @@ main.snap{transition:transform .22s ease-out}
     <div id="sendAs" hidden></div>
     <div id="mentionBar" hidden></div>
     <div id="replyBar" hidden><span></span><button type="button" class="iconBtn" id="replyCancel" aria-label="Cancelar respuesta">✕</button></div>
-    <form id="send">
+    <!-- Sin <form>: así Chrome no lo trata como un formulario para autocompletar (llave/tarjeta) -->
+    <div id="send">
       <button type="button" id="emBtn" title="Emotes">☺</button>
       <button type="button" id="pointsBtn" title="Puntos de canal y Bits" aria-label="Puntos de canal y Bits"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4 10l8 11 8-11z"/><path d="M4 10h16M12 3l-3 7 3 11 3-11z"/></svg></button>
       <input id="text" placeholder="Inicia sesión para escribir" autocomplete="off" enterkeyhint="send" disabled>
       <button type="button" id="loginChat" hidden>Inicia sesión para escribir</button>
-      <button class="primary" id="sendBtn" disabled>Enviar</button>
-    </form>
+      <button type="button" class="primary" id="sendBtn" disabled>Enviar</button>
+    </div>
   </div>
 </main>
 <div id="docViewer" hidden role="dialog"><div class="docTop"><button type="button" id="docBack" aria-label="Volver">←</button><b id="docTitle"></b></div></div>
@@ -1619,15 +1620,17 @@ chIn.addEventListener('keydown', e=>{
   else if(e.key==='Enter'){ e.preventDefault(); if(activeIdx>=0) pick(suggItems[activeIdx].login); else { hideSugg(); start(); } }
 });
 
-$('send').addEventListener('submit', e=>{
-  e.preventDefault(); const t=$('text').value.trim();
+function sendChat(){
+  const t=$('text').value.trim();
   if(!t || !ws || ws.readyState!==1 || !token) return;
   if(replyTo){ ws.send(`@reply-parent-msg-id=${replyTo.id} PRIVMSG #${channel} :${t}`); }
   else ws.send(`PRIVMSG #${channel} :${t}`);
   showMsg(me.name||login, me.color, t, ownTwitchEmotes(t), {id:'own-'+Date.now(), login, badges: me.badges, badgeInfo: me.badgeInfo, parentName: replyTo && replyTo.name, parentBody: replyTo && replyTo.text, parentId: replyTo && replyTo.id, rootId: replyTo && ((msgIndex.get(replyTo.id)||{}).root || replyTo.id)}); // Twitch no devuelve tus propios mensajes
   setReply(null); $('mentionBar').hidden=true;
   $('text').value=''; $('picker').classList.remove('open');
-});
+}
+$('sendBtn').onclick=sendChat;
+$('text').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.isComposing && !e.defaultPrevented){ e.preventDefault(); sendChat(); } });
 // Tab completa emotes 7TV
 $('text').addEventListener('keydown', e=>{
   if(e.key!=='Tab') return; const t=e.target; const words=t.value.split(' '); const w=words.pop();
