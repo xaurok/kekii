@@ -103,7 +103,7 @@ form{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
 #text{flex:1}
 #loginChat{flex:1;min-width:0;text-align:left;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--accent);font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #loginChat:hover{border-color:var(--accent)}
-#picker{display:none;flex-direction:column;border-top:1px solid var(--line);max-height:min(300px,45vh);min-height:0;flex-shrink:1}
+#picker{display:none;flex-direction:column;border-top:1px solid var(--line);max-height:min(300px,45vh);min-height:0;flex-shrink:1;overflow:hidden}
 #picker.open{display:flex}
 .emHead{display:flex;gap:6px;padding:8px 8px 4px}
 #emSearch{flex:1;padding:7px 10px}
@@ -1224,8 +1224,11 @@ function renderPicker(){
 }
 $('emBtn').onclick = ()=>{
   const open = $('picker').classList.toggle('open');
-  if(open){ $('emSearch').value=''; renderPicker(); }
+  if(open){ $('emSearch').value=''; renderPicker(); if(mobileKb()) $('text').blur(); }
 };
+// En el móvil, teclado y panel de emotes no caben a la vez (como en WhatsApp): al escribir se cierra el panel
+function mobileKb(){ return matchMedia('(pointer:coarse)').matches; }
+$('text').addEventListener('focus', ()=>{ if(mobileKb()) $('picker').classList.remove('open'); });
 $('emSearch').addEventListener('input', renderPicker);
 // Deslizar hacia abajo para cerrar el panel de emotes (desde arriba, o desde la lista si ya está arriba del todo)
 (()=>{
