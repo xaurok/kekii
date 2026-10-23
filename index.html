@@ -91,7 +91,11 @@ body.headerHidden header{display:none}
 #fsBtn{display:none;position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));z-index:6;
   align-items:center;gap:6px;padding:6px 11px 6px 9px;border-radius:999px;border:1.5px solid var(--accent);background:rgba(0,0,0,.6);color:#fff;
   font:700 13px var(--font,inherit);backdrop-filter:blur(6px);cursor:pointer;-webkit-tap-highlight-color:transparent}
-#fsBtn svg{color:var(--accent)}
+#fsBtn svg{color:var(--accent);flex:none}
+#fsBtn span{max-width:90px;overflow:hidden;white-space:nowrap;transition:max-width .3s,opacity .3s}
+/* A los pocos segundos se queda solo el icono; vuelve el texto al tocar el vídeo */
+#fsBtn.compact{padding:7px;gap:0}
+#fsBtn.compact span{max-width:0;opacity:0}
 body.watching:not(.mini) #fsBtn{display:inline-flex}
 body.fsChat #fsBtn{opacity:.75}
 #chatToggle{display:none;position:absolute;right:calc(10px + env(safe-area-inset-right,0px));top:54px;z-index:5;
@@ -1547,7 +1551,7 @@ function start(push=true, fromPop=false){
   if(!c) return;
   if(c===channel && document.body.classList.contains('mini')){ expandMini(!fromPop && push); if(!fromPop && !push) history.replaceState({c}, '', BASE+c); return; }
   document.body.classList.remove('mini'); { const w=$('playerWrap'); w.style.left=w.style.top=w.style.right=w.style.bottom=''; }
-  channel = c; store.set('tw_channel', c); addRecent(c); $('channel').value = c;
+  channel = c; store.set('tw_channel', c); addRecent(c); fsPeek(); $('channel').value = c;
   document.body.classList.remove('homeView');
   if(!fromPop){ if(push && !document.body.classList.contains('watching')) history.pushState({c}, '', BASE + c); else history.replaceState({c}, '', BASE + c); }
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
@@ -2393,7 +2397,9 @@ addSwipe($('actBody'),
 const FS_IN='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V4h4M21 8V4h-4M3 16v4h4M21 16v4h-4"/><path d="M14 9h4v5h-2l-2 2z"/></svg>';
 const FS_OUT='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4H4M16 3v4h4M8 21v-4H4M16 21v-4h4"/></svg>';
 function fsUi(){ const on=document.body.classList.contains('fsChat'); const b=$('fsBtn');
-  b.innerHTML=(on?FS_OUT:FS_IN)+'<span>'+T(on?'Salir':'Con chat')+'</span>'; b.setAttribute('aria-label', T(on?'Salir de pantalla completa':'Pantalla completa con chat')); }
+  b.innerHTML=(on?FS_OUT:FS_IN)+'<span>'+T(on?'Salir':'Con chat')+'</span>'; b.setAttribute('aria-label', T(on?'Salir de pantalla completa':'Pantalla completa con chat')); fsPeek(); }
+function fsPeek(){ const b=$('fsBtn'); b.classList.remove('compact'); clearTimeout(fsPeek._t); fsPeek._t=setTimeout(()=>b.classList.add('compact'), 4000); }
+$('tapShield').addEventListener('pointerdown', fsPeek);
 async function toggleFsChat(){
   if(document.fullscreenElement || document.webkitFullscreenElement){ try{ await (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} return; }
   const el=document.documentElement; const req=el.requestFullscreen||el.webkitRequestFullscreen;
