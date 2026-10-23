@@ -1038,10 +1038,13 @@ async function loadTwitchEmotes(){
 // Nombre y foto de los canales de tus emotes de suscripción (para separarlos por canal)
 const emOwners = new Map(); // id -> {name, img}
 async function loadEmoteOwners(){
-  const ids=[...new Set([...twEm.values()].filter(e=>e.src==='tw-otros' && e.owner && e.owner!=='0' && !emOwners.has(e.owner)).map(e=>e.owner))];
-  for(let i=0;i<ids.length;i+=100){
-    try{ (await helix('users?'+ids.slice(i,i+100).map(x=>'id='+x).join('&'))).forEach(u=>emOwners.set(u.id,{name:u.display_name, img:u.profile_image_url})); }catch(e){}
-  }
+  // Solo canales con id numérico (los emotes de Twitch, como los del tren de hype, no tienen canal)
+  const ids=[...new Set([...twEm.values()].filter(e=>e.src==='tw-otros' && /^\d+$/.test(e.owner||'') && e.owner!=='0' && !emOwners.has(e.owner)).map(e=>e.owner))];
+  const fetchIds=async list=>{
+    try{ (await helix('users?'+list.map(x=>'id='+x).join('&'))).forEach(u=>emOwners.set(u.id,{name:u.display_name, img:u.profile_image_url})); }
+    catch(e){ if(list.length>1){ const h=Math.ceil(list.length/2); await fetchIds(list.slice(0,h)); await fetchIds(list.slice(h)); } }
+  };
+  for(let i=0;i<ids.length;i+=100) await fetchIds(ids.slice(i,i+100));
   if(ids.length) renderPicker();
 }
 function renderSubs(list, out){
@@ -1049,7 +1052,10 @@ function renderSubs(list, out){
   list.forEach(it=>{ const k=it[1].owner||'?'; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(it); });
   if(groups.size<=1){ emSection(list,'',out); return; }
   const nameOf=k=>(emOwners.get(k)||{}).name || T('Otros');
-  const keys=[...groups.keys()].sort((a,b)=>nameOf(a).localeCompare(nameOf(b),LOC));
+  const known=k=>emOwners.has(k);
+  const keys=[...groups.keys()].sort((a,b)=> (known(b)-known(a)) || nameOf(a).localeCompare(nameOf(b),LOC));
+  // todos los emotes sin canal conocido van juntos en «Otros»
+  const other=keys.filter(k=>!known(k)); if(other.length>1){ const all=other.flatMap(k=>groups.get(k)); other.forEach(k=>groups.delete(k)); groups.set('?',all); keys.splice(keys.indexOf(other[0]),other.length,'?'); }
   const wrap=document.createElement('div'); wrap.className='subsWrap';
   const rail=document.createElement('div'); rail.className='subsRail';
   const body=document.createElement('div'); body.className='subsBody';
