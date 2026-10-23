@@ -82,6 +82,15 @@ body.noShieldTmp #tapShield,body.noShield #tapShield,html.desk #tapShield{displa
 body.headerHidden header{display:none}
 #statusBar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line);min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 #statusBar::-webkit-scrollbar{display:none}
+/* Chat estrecho: los iconos menos usados pasan al menú «⋯» */
+#barMoreBtn{display:none;position:relative}
+#statusBar.narrow #chanToggle,#statusBar.narrow #sleepBtn,#statusBar.narrow #chattersBtn,#statusBar.narrow #homeBtn{display:none!important}
+#statusBar.narrow #barMoreBtn{display:inline-flex}
+#statusBar:has(#sleepBtn.on) #barMoreBtn::after{content:"";position:absolute;top:5px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.moreRow{display:flex;align-items:center;gap:12px;width:100%;padding:12px 10px;border:0;background:none;border-radius:10px;font-weight:700;text-align:left;cursor:pointer}
+.moreRow:hover{background:var(--field)}
+.moreRow svg{flex:none}
+.moreRow small{margin-left:auto;color:var(--accent);font-weight:700}
 #statusBar>*{flex-shrink:0}
 #statusBar>#chanTxt{flex-shrink:1;min-width:0}
 #status{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -633,6 +642,7 @@ main.snap{transition:transform .22s ease-out}
       <button class="iconBtn" id="chattersBtn" type="button" aria-label="Usuarios del chat" title="Usuarios del chat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.2c2.4.1 4.4 1.7 5 4.8"/></svg></button>
       <button class="iconBtn actBtn" type="button" aria-label="Actividad"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></svg><span class="actBadge" hidden></span></button>
       <button class="iconBtn" id="homeBtn" type="button" aria-label="Inicio"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></button>
+      <button class="iconBtn" id="barMoreBtn" type="button" aria-label="Más opciones" title="Más opciones"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
       <button class="iconBtn" id="hideChatBtn" type="button" aria-label="Ocultar chat" title="Ocultar chat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 6 6 6-6 6M12 6l6 6-6 6"/></svg></button>
     </div>
     <div id="chanMore" hidden><div id="chanTitle"></div><div id="chanTags"></div></div>
@@ -691,7 +701,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -2498,9 +2508,35 @@ function keepPlaying(){
   [250, 800, 1600, 3000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused() && channel) tPlayer.play(); }catch(e){} }, ms));
 }
 // ---------- Ancho del chat ajustable (PC y horizontal); el vídeo nunca baja de ~400 px (mínimo de Twitch) ----------
+// Menú «⋯» con los botones que no caben en la barra del canal
+function openMoreMenu(){
+  closeSheet();
+  const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
+  const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
+  const row=(srcId,label,extra)=>{ const src=$(srcId); if(!src || src.hidden) return;
+    const b=document.createElement('button'); b.type='button'; b.className='moreRow';
+    const ic=src.querySelector('svg'); if(ic) b.appendChild(ic.cloneNode(true));
+    const t=document.createElement('span'); t.textContent=T(label); b.appendChild(t);
+    if(extra){ const x=document.createElement('small'); x.textContent=extra; b.appendChild(x); }
+    b.onclick=()=>{ closeSheet(); src.click(); }; sh.appendChild(b); };
+  row('sleepBtn','Temporizador de apagado', sleepAt ? sleepLeft()+' min' : '');
+  row('chattersBtn','Usuarios del chat');
+  row('chanToggle', document.body.classList.contains('chanCollapsed') ? 'Mostrar título y etiquetas' : 'Ocultar título y etiquetas');
+  row('homeBtn','Inicio');
+}
+$('barMoreBtn').onclick=openMoreMenu;
+// Decide si hace falta el «⋯»: se mide con todos los iconos visibles y, si no caben, se agrupan
+(()=>{ const sb=$('statusBar'); let busy=false;
+  const fit=()=>{ if(busy) return; busy=true; sb.classList.remove('narrow'); const name=$('chanName');
+    // El nombre del canal puede encogerse con «…», pero necesita un mínimo para que se lea algo
+    const need=sb.scrollWidth>sb.clientWidth+1 || (name && name.offsetWidth && name.offsetWidth<40 && sb.clientWidth<420);
+    sb.classList.toggle('narrow', !!need); requestAnimationFrame(()=>{ busy=false; }); };
+  if(window.ResizeObserver) new ResizeObserver(fit).observe(sb);
+  new MutationObserver(rs=>{ if(rs.some(r=>r.target!==sb)) requestAnimationFrame(fit); }).observe(sb,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','class'],characterData:true});
+  fit(); })();
 function chatInnerW(){ const c=$('chatCol'); return c.getBoundingClientRect().width-(parseFloat(getComputedStyle(c).paddingRight)||0); }
-// Mínimo 300 px: con menos, los iconos de la barra del canal no caben
-function chatWLimits(){ return {min:300, max:Math.max(300, innerWidth-400)}; }
+// Mínimo 240 px (si no caben todos los iconos, los menos usados pasan al menú «⋯»)
+function chatWLimits(){ return {min:240, max:Math.max(240, innerWidth-400)}; }
 function applyChatW(w, save){
   const r=document.documentElement.style;
   if(w==null){ r.removeProperty('--chatW'); if(save) store.set('tw_chat_w', null); return; }
