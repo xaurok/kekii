@@ -109,7 +109,9 @@ body.headerHidden header{display:none}
 #fsBtn.compact{padding:7px;gap:0}
 #fsBtn.compact span{max-width:0;opacity:0}
 body.watching:not(.mini) #fsBtn{display:inline-flex}
-body.fsChat #fsBtn{opacity:.75}
+/* Dentro del modo, «Salir» va relleno de verde: se ve que está activado */
+body.fsChat #fsBtn{background:var(--accent);color:var(--accent-fg,#04201a);border-color:var(--accent)}
+body.fsChat #fsBtn svg{color:var(--accent-fg,#04201a)}
 #chatToggle{display:none;position:absolute;right:calc(10px + env(safe-area-inset-right,0px));top:54px;z-index:5;
   align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:700;backdrop-filter:blur(6px)}
 #chatCol{width:var(--chatW,360px);display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--panel);min-height:0;position:relative}
