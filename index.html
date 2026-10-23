@@ -174,6 +174,11 @@ body.homeView main{display:none}
 .gifMsg{display:inline-block;vertical-align:middle;margin:3px 2px}
 .gifMsg img{display:block;max-height:120px;max-width:min(220px,60vw);border-radius:8px}
 .hist .gifMsg img,.thRow .gifMsg img{max-height:90px}
+.em{cursor:pointer}
+.emCard{display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 0 14px}
+.emCard img{height:112px;max-width:min(260px,70vw);object-fit:contain;image-rendering:auto}
+.emCardName{margin-top:12px;font:700 22px var(--display);overflow-wrap:anywhere}
+.emCardSrc{margin-top:4px;color:var(--muted);font-size:14px}
 .replyTo{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px}
 .replyTo.thr{cursor:pointer}.replyTo.thr::before{content:"↳ ";color:var(--accent)}
 .thList{display:flex;flex-direction:column;margin-top:8px}
@@ -685,6 +690,8 @@ const EN = {
  "Confirma con <b>Añadir</b>.":"Confirm with <b>Add</b>.",
  "Busca el icono de <b>instalar</b> <span class=\"kbd\">⊕</span> a la derecha de la barra de direcciones.":"Look for the <b>install</b> <span class=\"kbd\">⊕</span> icon on the right of the address bar.",
  "O abre el menú del navegador y elige <b>Instalar Kekii</b>.":"Or open the browser menu and choose <b>Install Kekii</b>.",
+ 'Usar en el chat':'Use in chat','Copiar nombre':'Copy name','Nombre copiado':'Name copied',
+ '7TV · Emote del canal':'7TV · Channel emote','7TV · Emote global':'7TV · Global emote','BTTV · Emote del canal':'BTTV · Channel emote','BTTV · Emote global':'BTTV · Global emote','FFZ · Emote del canal':'FFZ · Channel emote','FFZ · Emote global':'FFZ · Global emote','Twitch · Emote del canal':'Twitch · Channel emote','Twitch · Emote global':'Twitch · Global emote','Twitch · De tus suscripciones':'Twitch · From your subscriptions',
  'Otros':'Other','Conversación':'Conversation','Ver conversación':'View conversation','Mensaje original':'Original message','El mensaje original ya no está en el chat.':'The original message is no longer in the chat.',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
@@ -1213,13 +1220,39 @@ function sys(t){ const d=document.createElement('div'); d.className='msg sys'; d
 const fallbackColors = ['#e05b5b','#3d8bff','#2fb56a','#d98a1c','#b45cd6','#1fa7b8','#e0569d'];
 function colorFor(name,c){ if(c) return c; let h=0; for(const ch of name) h=(h*31+ch.charCodeAt(0))|0; return fallbackColors[Math.abs(h)%fallbackColors.length]; }
 
-function emoteNode(url,name){
+function emoteNode(url,name,src){
   const s=document.createElement('span'); s.className='em';
+  s.onclick=ev=>{ ev.stopPropagation(); openEmoteCard(name, url, src); };
   const i=document.createElement('img'); i.alt=i.title=name;
   // Si la imagen del emote no carga, se muestra su nombre como texto en vez de un hueco vacío
   i.onerror=()=>{ s.replaceWith(document.createTextNode(name)); };
   i.onload=()=>{ if(!i.naturalWidth) i.onerror(); };
   i.src=url; s.appendChild(i); return s;
+}
+// Tarjeta de un emote: imagen grande, nombre, de dónde es y botones para usarlo o copiarlo
+function openEmoteCard(name, url, src){
+  closeSheet();
+  const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
+  const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
+  // versión más grande de la imagen según de dónde sea
+  const big = /betterttv/.test(url) ? url.replace('/2x.webp','/3x.webp')
+            : /7tv/.test(url) ? url.replace('/2x.webp','/4x.webp')
+            : /jtvnw/.test(url) ? url.replace(/\/dark\/2\.0$/,'/dark/3.0') : url;
+  const box=document.createElement('div'); box.className='emCard';
+  const im=document.createElement('img'); im.alt=name; im.onerror=()=>{ if(im.src!==url) im.src=url; }; im.src=big;
+  const nm=document.createElement('div'); nm.className='emCardName'; nm.textContent=name;
+  const SRC={'canal':'7TV · Emote del canal','global':'7TV · Emote global','bttv-canal':'BTTV · Emote del canal','bttv-global':'BTTV · Emote global','ffz-canal':'FFZ · Emote del canal','ffz-global':'FFZ · Emote global','twitch':'Twitch'};
+  const tw = src==='twitch' && twEm.get(name);
+  const label = tw ? ({'tw-canal':'Twitch · Emote del canal','tw-global':'Twitch · Emote global','tw-otros':'Twitch · De tus suscripciones'}[tw.src]||'Twitch') : (SRC[src]||'');
+  const sr=document.createElement('div'); sr.className='emCardSrc'; sr.textContent=T(label);
+  box.append(im,nm,sr); sh.appendChild(box);
+  const acts=document.createElement('div'); acts.className='acts';
+  if(token && !$('text').disabled){ const u=document.createElement('button'); u.type='button'; u.className='primary'; u.textContent=T('Usar en el chat');
+    u.onclick=()=>{ useEmote(name); closeSheet(); $('text').focus(); }; acts.appendChild(u); }
+  const c=document.createElement('button'); c.type='button'; c.textContent=T('Copiar nombre');
+  c.onclick=async()=>{ try{ await navigator.clipboard.writeText(name); toast(T('Nombre copiado')); }catch(e){ toast(name); } closeSheet(); };
+  acts.appendChild(c); if(acts.children.length===1) acts.style.gridTemplateColumns='1fr';
+  sh.appendChild(acts);
 }
 function renderText(container, text, twEmotes, cheer){
   // twEmotes: [{start,end,id}] using code point indices
@@ -1234,13 +1267,13 @@ function renderText(container, text, twEmotes, cheer){
   for(const p of parts){
     if(p.gif){ const g=document.createElement('span'); g.className='gifMsg'; const im=document.createElement('img'); im.alt=im.title=p.name; im.loading='lazy';
       im.onerror=()=>{ g.replaceWith(document.createTextNode(p.name)); }; im.src=p.gif; g.appendChild(im); container.appendChild(g); last=null; continue; }
-    if(p.tw){ last = emoteNode(`https://static-cdn.jtvnw.net/emoticons/v2/${p.tw}/default/dark/2.0`,p.name); container.appendChild(last); continue; }
+    if(p.tw){ last = emoteNode(`https://static-cdn.jtvnw.net/emoticons/v2/${p.tw}/default/dark/2.0`,p.name,'twitch'); container.appendChild(last); continue; }
     for(const w of p.t.split(/(\s+)/)){
       if(cheer){ const cn=cheerNode(w); if(cn){ container.appendChild(cn); last=null; continue; } }
       const e7 = emotes7.get(w);
       if(e7){
         if(e7.zw && last){ const i=document.createElement('img'); i.className='zw'; i.alt=i.title=w; i.onerror=()=>i.remove(); i.src=e7.url; last.appendChild(i); }
-        else { last = emoteNode(e7.url,w); container.appendChild(last); }
+        else { last = emoteNode(e7.url,w,e7.src); container.appendChild(last); }
       } else if(w){
         if(/\S/.test(w)) last = null;
         container.appendChild(document.createTextNode(w));
