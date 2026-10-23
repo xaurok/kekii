@@ -1,6 +1,6 @@
 // Service worker mínimo para que la app se pueda instalar.
 // Guarda la página para que abra rápido; el stream y el chat siempre van por internet.
-const CACHE = 'kekii-v69';
+const CACHE = 'kekii-v70';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'manifest.json', 'icon-192.png', 'icon-512.png'])));
   // La versión nueva espera a que el usuario toque "Actualizar" en el aviso de la app

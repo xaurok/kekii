@@ -150,9 +150,26 @@ $('installBtn').onclick=async()=>{
   if(/Instagram|FBAN|FBAV|FB_IAB|musical_ly|BytedanceWebview|TikTok|Twitter|Snapchat/i.test(navigator.userAgent)){
     showHelp(LANG==='es'?'Estás en el navegador de Instagram o TikTok, y desde aquí no se puede instalar. Toca ⋯ arriba a la derecha y elige «Abrir en el navegador» (o «Abrir en Chrome» / «Safari»).':'You’re in Instagram’s or TikTok’s browser, which can’t install apps. Tap ⋯ at the top right and choose “Open in browser” (or “Open in Chrome” / “Safari”).'); return; }
   if(matchMedia('(display-mode: standalone)').matches) showHelp(LANG==='es'?'Ya estás usando la app instalada.':'You’re already using the installed app.');
-  else if(ios) showHelp(LANG==='es'?'En Safari, toca Compartir ⬆︎ y luego «Añadir a pantalla de inicio».':'In Safari, tap Share ⬆︎ and then “Add to Home Screen”.');
-  else showHelp(LANG==='es'?'En Chrome, toca ⋮ arriba a la derecha y elige «Instalar aplicación».':'In Chrome, tap ⋮ at the top right and choose “Install app”.',
-    LANG==='es'?'¿No aparece «Instalar aplicación»? Si estás en modo incógnito, ábrela en una pestaña normal.':'Don’t see “Install app”? If you’re in incognito mode, open it in a normal tab.');
+  else if(ios) showHelp(LANG==='es'?'Toca Compartir ⬆︎ y luego «Añadir a pantalla de inicio». Si no aparece, ábrela en Safari.':'Tap Share ⬆︎ and then “Add to Home Screen”. If it’s not there, open it in Safari.');
+  else {
+    const ua=navigator.userAgent, mob=/Android/i.test(ua);
+    const br=/SamsungBrowser/i.test(ua)?'samsung':/OPR\/|Opera|OPX\//i.test(ua)?'opera':/EdgA?\//i.test(ua)?'edge':/Firefox\//i.test(ua)?'firefox':navigator.brave?'brave':/Chrome\//i.test(ua)?'chrome':'other';
+    const H = mob ? {
+      chrome:['En Chrome, toca ⋮ arriba a la derecha y elige «Instalar aplicación».','In Chrome, tap ⋮ at the top right and choose “Install app”.'],
+      samsung:['En Samsung Internet, toca el icono ⬇ de la barra de direcciones o el menú ☰ → «Añadir página a» → «Pantalla de inicio».','In Samsung Internet, tap the ⬇ icon in the address bar or the ☰ menu → “Add page to” → “Home screen”.'],
+      opera:['En Opera, toca ⋮ y elige «Añadir a…» → «Pantalla de inicio».','In Opera, tap ⋮ and choose “Add to…” → “Home screen”.'],
+      edge:['En Edge, toca ⋯ en la barra de abajo y elige «Añadir al teléfono».','In Edge, tap ⋯ in the bottom bar and choose “Add to phone”.'],
+      firefox:['En Firefox, toca ⋮ y elige «Añadir a pantalla de inicio».','In Firefox, tap ⋮ and choose “Add to home screen”.'],
+      brave:['En Brave, toca ⋮ y elige «Instalar app».','In Brave, tap ⋮ and choose “Install app”.'],
+      other:['Abre el menú del navegador y busca «Instalar app» o «Añadir a pantalla de inicio». Si no aparece, ábrela en Chrome.','Open the browser menu and look for “Install app” or “Add to home screen”. If it’s not there, open it in Chrome.']
+    } : {
+      firefox:['Firefox para ordenador no permite instalar webs como app. Puedes instalarla desde Chrome o Edge.','Firefox on desktop can’t install websites as apps. You can install it from Chrome or Edge.'],
+      other:['Busca el icono de instalar ⊕ a la derecha de la barra de direcciones, o en el menú del navegador elige «Instalar Kekii».','Look for the install ⊕ icon on the right of the address bar, or choose “Install Kekii” in the browser menu.']
+    };
+    const msg=(H[br]||H.other)[LANG==='es'?0:1];
+    showHelp(msg, (br==='firefox' && !mob) ? '' :
+    LANG==='es'?'¿No aparece la opción? Si estás en modo incógnito o privado, ábrela en una pestaña normal.':'Don’t see the option? If you’re in incognito or private mode, open it in a normal tab.');
+  }
 };
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 

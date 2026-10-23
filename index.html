@@ -664,6 +664,27 @@ const EN = {
  'Usuarios del chat':'Chat users','Personas que han escrito en el chat desde que entraste (incluidos los mensajes anteriores).':'People who have written in chat since you joined (including earlier messages).','Buscar usuario':'Search user','En el chat':'In chat','Nadie con ese nombre ha escrito todavía.':'Nobody with that name has written yet.','Todavía no ha escrito nadie.':'Nobody has written yet.','mensaje':'message','mensajes':'messages',
  'Informar de un problema':'Report a problem','Problema en Kekii':'Problem in Kekii','Cuéntanos qué ha pasado:':'Tell us what happened:','Datos para ayudarnos (puedes borrarlos si quieres):':'Details to help us (you can delete them if you like):',
  'En iPhone, la ventana flotante puede funcionar de otra forma o no estar disponible. Si no te funciona, avísanos desde «Informar de un problema».':'On iPhone, the floating window may work differently or not be available. If it doesn’t work for you, let us know with “Report a problem”.',
+ "Toca el botón <b>Compartir</b> <span class=\"kbd\">⬆︎</span> del navegador (en Chrome está junto a la barra de direcciones).":"Tap the browser’s <b>Share</b> <span class=\"kbd\">⬆︎</span> button (in Chrome it’s next to the address bar).",
+ "Si no aparece esa opción, abre kekii.app en <b>Safari</b> y repite los pasos.":"If that option doesn’t appear, open kekii.app in <b>Safari</b> and repeat the steps.",
+ "Toca el icono de <b>instalar</b> <span class=\"kbd\">⬇</span> de la barra de direcciones, si aparece.":"Tap the <b>install</b> <span class=\"kbd\">⬇</span> icon in the address bar, if it shows up.",
+ "Si no, abre el menú <span class=\"kbd\">☰</span> de abajo y elige <b>Añadir página a</b> → <b>Pantalla de inicio</b>.":"Otherwise, open the <span class=\"kbd\">☰</span> menu at the bottom and choose <b>Add page to</b> → <b>Home screen</b>.",
+ "Confirma con <b>Añadir</b>. Aparecerá el icono de Kekii en tu pantalla de inicio.":"Confirm with <b>Add</b>. The Kekii icon will appear on your home screen.",
+ "Toca el menú <span class=\"kbd\">⋮</span> de Opera (arriba a la derecha).":"Tap Opera’s <span class=\"kbd\">⋮</span> menu (top right).",
+ "Elige <b>Añadir a…</b> → <b>Pantalla de inicio</b> (o <b>Instalar app</b>).":"Choose <b>Add to…</b> → <b>Home screen</b> (or <b>Install app</b>).",
+ "Toca el menú <span class=\"kbd\">⋯</span> de la barra de abajo de Edge.":"Tap the <span class=\"kbd\">⋯</span> menu in Edge’s bottom bar.",
+ "Elige <b>Añadir al teléfono</b> (o <b>Añadir a la pantalla de inicio</b>).":"Choose <b>Add to phone</b> (or <b>Add to home screen</b>).",
+ "Toca el menú <span class=\"kbd\">⋮</span> de Firefox.":"Tap Firefox’s <span class=\"kbd\">⋮</span> menu.",
+ "Elige <b>Añadir a pantalla de inicio</b> (o <b>Instalar</b>).":"Choose <b>Add to home screen</b> (or <b>Install</b>).",
+ "Toca el menú <span class=\"kbd\">⋮</span> de Brave.":"Tap Brave’s <span class=\"kbd\">⋮</span> menu.",
+ "Abre el menú del navegador (<span class=\"kbd\">⋮</span>, <span class=\"kbd\">⋯</span> o <span class=\"kbd\">☰</span>).":"Open the browser menu (<span class=\"kbd\">⋮</span>, <span class=\"kbd\">⋯</span> or <span class=\"kbd\">☰</span>).",
+ "Busca <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.":"Look for <b>Install app</b> or <b>Add to home screen</b>.",
+ "Si no aparece, abre kekii.app en <b>Chrome</b>, que es donde mejor funciona.":"If it’s not there, open kekii.app in <b>Chrome</b>, where it works best.",
+ "Firefox para ordenador no permite instalar webs como app.":"Firefox on desktop can’t install websites as apps.",
+ "Puedes usar Kekii en una pestaña normal, o instalarla desde <b>Chrome</b> o <b>Edge</b>.":"You can use Kekii in a normal tab, or install it from <b>Chrome</b> or <b>Edge</b>.",
+ "En Safari, abre el menú <b>Archivo</b> y elige <b>Añadir al Dock</b>.":"In Safari, open the <b>File</b> menu and choose <b>Add to Dock</b>.",
+ "Confirma con <b>Añadir</b>.":"Confirm with <b>Add</b>.",
+ "Busca el icono de <b>instalar</b> <span class=\"kbd\">⊕</span> a la derecha de la barra de direcciones.":"Look for the <b>install</b> <span class=\"kbd\">⊕</span> icon on the right of the address bar.",
+ "O abre el menú del navegador y elige <b>Instalar Kekii</b>.":"Or open the browser menu and choose <b>Install Kekii</b>.",
  'Otros':'Other','Conversación':'Conversation','Ver conversación':'View conversation','Mensaje original':'Original message','El mensaje original ya no está en el chat.':'The original message is no longer in the chat.',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
@@ -2644,6 +2665,18 @@ addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredInstall
 addEventListener('appinstalled', ()=>{ deferredInstall=null; closeSheet(); toast('Kekii instalada'); });
 function isInstalled(){ return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone===true; }
 const IN_APP_BROWSER=/Instagram|FBAN|FBAV|FB_IAB|musical_ly|BytedanceWebview|TikTok|Twitter|Snapchat/i.test(navigator.userAgent);
+// Qué navegador es (para dar los pasos de instalación de cada uno)
+function browserKind(){
+  const ua=navigator.userAgent;
+  if(/SamsungBrowser/i.test(ua)) return 'samsung';
+  if(/OPR\/|OPT\/|Opera|OPX\//i.test(ua)) return 'opera';
+  if(/EdgA?\/|EdgiOS\//i.test(ua)) return 'edge';
+  if(/Firefox\/|FxiOS\//i.test(ua)) return 'firefox';
+  if(navigator.brave) return 'brave';
+  if(/CriOS\/|Chrome\//i.test(ua)) return 'chrome';
+  if(/Safari\//i.test(ua)) return 'safari';
+  return 'other';
+}
 function openInstallGuide(){
   closeSheet();
   const sh=$('sheet'); sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false;
@@ -2656,22 +2689,59 @@ function openInstallGuide(){
   const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/i.test(ua), android=/Android/i.test(ua), inApp=IN_APP_BROWSER;
   const ol=document.createElement('ol'); ol.className='instSteps';
   const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=T(html); li.appendChild(sp); ol.appendChild(li); };
+  const br=browserKind();
+  const confirmIcon='Confirma con <b>Instalar</b>. Aparecerá el icono de Kekii en tu pantalla de inicio.';
   if(inApp){
     step('Estás en el navegador de otra app, y desde aquí no se puede instalar.');
     step('Toca el menú <span class="kbd">⋯</span> (o <span class="kbd">⋮</span>) arriba a la derecha.');
     step('Elige <b>Abrir en el navegador</b> (o <b>Abrir en Chrome</b> / <b>Safari</b>) e instálala desde allí.');
   } else if(ios){
-    step('Ábrela en <b>Safari</b> (en otros navegadores de iPhone no se puede instalar).');
-    step('Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> de la barra de abajo.');
+    if(br==='safari') step('Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> de la barra de abajo.');
+    else step('Toca el botón <b>Compartir</b> <span class="kbd">⬆︎</span> del navegador (en Chrome está junto a la barra de direcciones).');
     step('Baja y elige <b>Añadir a pantalla de inicio</b>, y luego <b>Añadir</b>.');
+    if(br!=='safari') step('Si no aparece esa opción, abre kekii.app en <b>Safari</b> y repite los pasos.');
   } else if(android){
-    step('Toca el menú <span class="kbd">⋮</span> arriba a la derecha de Chrome.');
-    step('Elige <b>Instalar app</b> (o <b>Añadir a pantalla de inicio</b>).');
-    step('Confirma con <b>Instalar</b>. Aparecerá el icono de Kekii en tu pantalla de inicio.');
+    if(br==='samsung'){
+      step('Toca el icono de <b>instalar</b> <span class="kbd">⬇</span> de la barra de direcciones, si aparece.');
+      step('Si no, abre el menú <span class="kbd">☰</span> de abajo y elige <b>Añadir página a</b> → <b>Pantalla de inicio</b>.');
+      step('Confirma con <b>Añadir</b>. Aparecerá el icono de Kekii en tu pantalla de inicio.');
+    } else if(br==='opera'){
+      step('Toca el menú <span class="kbd">⋮</span> de Opera (arriba a la derecha).');
+      step('Elige <b>Añadir a…</b> → <b>Pantalla de inicio</b> (o <b>Instalar app</b>).');
+      step('Confirma con <b>Añadir</b>. Aparecerá el icono de Kekii en tu pantalla de inicio.');
+    } else if(br==='edge'){
+      step('Toca el menú <span class="kbd">⋯</span> de la barra de abajo de Edge.');
+      step('Elige <b>Añadir al teléfono</b> (o <b>Añadir a la pantalla de inicio</b>).');
+      step(confirmIcon);
+    } else if(br==='firefox'){
+      step('Toca el menú <span class="kbd">⋮</span> de Firefox.');
+      step('Elige <b>Añadir a pantalla de inicio</b> (o <b>Instalar</b>).');
+      step('Confirma con <b>Añadir</b>. Aparecerá el icono de Kekii en tu pantalla de inicio.');
+    } else if(br==='brave'){
+      step('Toca el menú <span class="kbd">⋮</span> de Brave.');
+      step('Elige <b>Instalar app</b> (o <b>Añadir a pantalla de inicio</b>).');
+      step(confirmIcon);
+    } else if(br==='chrome'){
+      step('Toca el menú <span class="kbd">⋮</span> arriba a la derecha de Chrome.');
+      step('Elige <b>Instalar app</b> (o <b>Añadir a pantalla de inicio</b>).');
+      step(confirmIcon);
+    } else {
+      step('Abre el menú del navegador (<span class="kbd">⋮</span>, <span class="kbd">⋯</span> o <span class="kbd">☰</span>).');
+      step('Busca <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.');
+      step('Si no aparece, abre kekii.app en <b>Chrome</b>, que es donde mejor funciona.');
+    }
   } else {
-    step('En Chrome o Edge, busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.');
-    step('O abre el menú <span class="kbd">⋮</span> y elige <b>Instalar Kekii</b>.');
-    step('Confirma con <b>Instalar</b>.');
+    if(br==='firefox'){
+      step('Firefox para ordenador no permite instalar webs como app.');
+      step('Puedes usar Kekii en una pestaña normal, o instalarla desde <b>Chrome</b> o <b>Edge</b>.');
+    } else if(br==='safari'){
+      step('En Safari, abre el menú <b>Archivo</b> y elige <b>Añadir al Dock</b>.');
+      step('Confirma con <b>Añadir</b>.');
+    } else {
+      step('Busca el icono de <b>instalar</b> <span class="kbd">⊕</span> a la derecha de la barra de direcciones.');
+      step('O abre el menú del navegador y elige <b>Instalar Kekii</b>.');
+      step('Confirma con <b>Instalar</b>.');
+    }
   }
   sh.appendChild(ol);
   const acts=document.createElement('div'); acts.className='acts';
