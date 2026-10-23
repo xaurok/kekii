@@ -1414,6 +1414,7 @@ function showMsg(name,color,text,twEmotes,meta={}){
   else if(meta.reward){ const ht=document.createElement('span'); ht.className='hlTag'; ht.textContent='Canjeó una recompensa del canal'; d.insertBefore(ht, d.firstChild); }
   renderText(t, body, twEmotes, !!meta.bits); t.className='mt'; t._r=[body, twEmotes, !!meta.bits]; d.appendChild(t);
   if(meta.id) d.dataset.id=meta.id; d.dataset.user=userLogin;
+  if(!meta.old) countChatEmotes(body);
   if(meta.deleted) markDeleted(d);
   if(meta.id) indexMsg({id:meta.id, name, color, login:userLogin, text:body, emotes:twEmotes, t:meta.t||Date.now(), root, parentName:meta.parentName, parentBody:meta.parentBody, parentId:meta.parentId});
   if(meta.target) meta.target.appendChild(d); else push(d);
@@ -1506,7 +1507,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  pushQ=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  pushQ=[]; chatEmUse=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
@@ -2976,6 +2977,14 @@ function mentionQuery(){
   const m=/(^|\s)@([\w]*)$/.exec(t.value.slice(0,pos));
   return m ? {q:m[2].toLowerCase(), start:pos-m[2].length-1, end:pos} : null;
 }
+// Emotes que se están usando en el chat (últimos 5 minutos), para ordenar las sugerencias
+let chatEmUse=[]; // [tiempo, nombre]
+function countChatEmotes(body){
+  const now=Date.now(); const seen=new Set();
+  for(const w of body.split(' ')){ if(w && !seen.has(w) && (emotes7.has(w) || twEm.has(w))){ seen.add(w); chatEmUse.push([now,w]); } }
+  if(chatEmUse.length>6000 || (chatEmUse.length && now-chatEmUse[0][0]>300000)) chatEmUse=chatEmUse.filter(x=>now-x[0]<=300000).slice(-5000);
+}
+function chatEmCounts(){ const now=Date.now(), c=new Map(); chatEmUse.forEach(([t,n])=>{ if(now-t<=300000) c.set(n,(c.get(n)||0)+1); }); return c; }
 // Autocompletar emotes: «:ke» → KEKW, Kappa… (mínimo 2 letras después de los dos puntos)
 function emoteQuery(){
   const t=$('text'); const pos=t.selectionStart ?? t.value.length;
@@ -2984,9 +2993,10 @@ function emoteQuery(){
 }
 function updateEmoteSug(eq){
   const bar=$('mentionBar'); const all=allEmotes(); const q=eq.q;
-  const rec=recentEmotes(); const rank=n=>{ const i=rec.indexOf(n); return i<0?999:i; };
+  const rec=recentEmotes(); const rank=n=>{ const i=rec.indexOf(n); return i<0?999:i; }; const hot=chatEmCounts();
   let hits=[...all.entries()].filter(([n])=>n.toLowerCase().includes(q));
   hits.sort((a,b)=>{ const ra=rank(a[0]), rb=rank(b[0]); if(ra!==rb) return ra-rb;
+    const ha=hot.get(a[0])||0, hb=hot.get(b[0])||0; if(ha!==hb) return hb-ha;
     const as=a[0].toLowerCase().startsWith(q), bs=b[0].toLowerCase().startsWith(q); return (bs-as) || a[0].length-b[0].length || a[0].localeCompare(b[0]); });
   hits=hits.slice(0,20);
   bar.textContent='';
