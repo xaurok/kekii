@@ -557,6 +557,12 @@ html,body,#home{overscroll-behavior-y:contain}
 .pipIc{width:52px;height:52px;border-radius:12px;flex:none;background:#1b1b1f;border:1px solid var(--line);position:relative}
 .pipIc span{position:absolute;right:7px;bottom:9px;width:22px;height:15px;border-radius:3px;background:var(--accent)}
 #updBanner{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:9999;display:flex;align-items:center;gap:10px;width:min(calc(100% - 24px),440px);background:#12241f;color:var(--fg);border:1px solid rgba(47,209,169,.45);border-radius:12px;padding:8px 6px 8px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:14px}
+/* Viendo un directo, los avisos van sobre el chat y nunca encima del vídeo (Twitch se pausa si hay algo encima) */
+@media (max-width:820px){ body.watching:not(.mini) #updBanner{top:auto;bottom:calc(70px + env(safe-area-inset-bottom,0px))} }
+@media (min-width:821px),(orientation:landscape) and (max-height:560px){
+  body.watching:not(.mini):not(.chatHidden) #toast{left:auto;right:12px;transform:none;max-width:calc(var(--chatW,340px) - 24px)}
+  body.watching:not(.mini):not(.chatHidden) #updBanner{left:auto;right:8px;transform:none;top:auto;bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(calc(var(--chatW,340px) - 16px),440px)}
+}
 #updBanner span{flex:1}
 #updBanner .updGo{background:var(--accent);color:var(--accent-fg);border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
 #updBanner .updX{background:none;border:0;color:var(--muted);font-size:16px;width:34px;cursor:pointer}
@@ -2511,7 +2517,7 @@ function createPlayer(c){
       });
       // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
       if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
-        if(c!==channel || Date.now()-shieldBackAt>4000) return;
+        if(c!==channel || Date.now()-shieldBackAt>8000) return;
         shieldBackAt=0; document.body.classList.add('noShield');
         [100, 700, 1500, 2500].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
       });
