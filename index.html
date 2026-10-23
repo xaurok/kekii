@@ -2549,8 +2549,12 @@ function jumpLive(silent){
   // El reproductor de Twitch no se reanuda solo si hay algo encima del vídeo: quitamos la capa unos segundos
   document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 7000);
   try{ tPlayer.pause(); }catch(e){}
-  setTimeout(()=>{ try{ tPlayer.setChannel(channel); }catch(e){} }, 250);
-  [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()){ diag('reintento play ('+ms+' ms) · encima: '+diagCover()); tPlayer.play(); } }catch(e){} }, ms));
+  setTimeout(()=>{ try{ tPlayer.setChannel(channel); diag('setChannel hecho'); }catch(e){ diag('setChannel error '+e); } }, 250);
+  // Experimento (solo en /diag): si Twitch no arranca, probar en silencio y luego quitar el silencio
+  if(DIAG) setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()){ diag('EXPERIMENTO: play en silencio'); tPlayer.setMuted(true); tPlayer.play();
+      setTimeout(()=>{ try{ diag('tras play en silencio: pausado='+tPlayer.isPaused()+' silencio='+tPlayer.getMuted()); tPlayer.setMuted(false);
+        setTimeout(()=>{ try{ diag('tras quitar silencio: pausado='+tPlayer.isPaused()+' silencio='+tPlayer.getMuted()); }catch(e){} }, 800); }catch(e){} }, 1000); } }catch(e){ diag('error '+e); } }, 1500);
+  [700, 1400, 2200, 3200, 4500, 6000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()){ diag('reintento play ('+ms+' ms) · encima: '+diagCover()); tPlayer.play(); setTimeout(()=>{ try{ diag('  → pausado='+tPlayer.isPaused()+' silencio='+tPlayer.getMuted()); }catch(e){} }, 300); } }catch(e){} }, ms));
   // Si el navegador no deja reanudarlo solo, avisamos en vez de dejarlo parado sin más
   setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) toast(T('Toca ▶ para continuar el directo')); }catch(e){} }, 6800);
 }
