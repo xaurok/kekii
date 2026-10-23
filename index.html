@@ -264,6 +264,10 @@ body.homeView main{display:none}
 
 /* ---------- Historial de usuario ---------- */
 .msg.old{opacity:.6}
+.msg.deleted .mt{display:none}
+.msg.deleted.reveal .mt{display:inline;opacity:.55;text-decoration:line-through}
+.delTag{color:var(--muted);font-style:italic;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.msg.deleted.reveal .delTag{margin-right:6px}
 .histSep{color:var(--muted);font-size:12px;text-align:center;padding:6px 0;border-bottom:1px dashed var(--line);margin-bottom:4px}
 .hist .hm{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
 .hist .hm:last-child{border-bottom:0}
@@ -639,7 +643,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -1406,8 +1410,33 @@ function showMsg(name,color,text,twEmotes,meta={}){
   if(meta.msgId==='highlighted-message'){ d.classList.add('highlighted'); const ht=document.createElement('span'); ht.className='hlTag'; ht.textContent='Mensaje destacado con puntos de canal'; d.insertBefore(ht, d.firstChild); }
   else if(meta.reward){ const ht=document.createElement('span'); ht.className='hlTag'; ht.textContent='Canjeó una recompensa del canal'; d.insertBefore(ht, d.firstChild); }
   renderText(t, body, twEmotes, !!meta.bits); t.className='mt'; t._r=[body, twEmotes, !!meta.bits]; d.appendChild(t);
+  if(meta.id) d.dataset.id=meta.id; d.dataset.user=userLogin;
+  if(meta.deleted) markDeleted(d);
   if(meta.id) indexMsg({id:meta.id, name, color, login:userLogin, text:body, emotes:twEmotes, t:meta.t||Date.now(), root, parentName:meta.parentName, parentBody:meta.parentBody, parentId:meta.parentId});
   if(meta.target) meta.target.appendChild(d); else push(d);
+}
+
+// ---------- Mensajes eliminados por moderadores (se pueden ver tocando ‹mensaje eliminado›) ----------
+function markDeleted(d){
+  if(d.classList.contains('deleted')) return;
+  d.classList.add('deleted');
+  const tag=document.createElement('span'); tag.className='delTag'; tag.textContent=T('‹mensaje eliminado›'); tag.title=T('Toca para ver lo que decía');
+  tag.onclick=e=>{ e.stopPropagation(); const r=d.classList.toggle('reveal'); tag.textContent=T(r?'‹eliminado›':'‹mensaje eliminado›'); };
+  const mt=d.querySelector(':scope > .mt'); if(mt) d.insertBefore(tag, mt); else d.appendChild(tag);
+}
+function chatMsgs(){ return [...chatEl.querySelectorAll(':scope > .msg'), ...pushQ.filter(e=>e.classList && e.classList.contains('msg'))]; }
+function fmtBanDur(sec){ sec=+sec; if(sec<60) return sec+' s'; if(sec<3600) return Math.round(sec/60)+' min'; if(sec<86400) return Math.round(sec/3600)+' h'; return Math.round(sec/86400)+' '+T('días'); }
+function onClearChat(m){
+  if(!m.trailing){ pushQ=[]; chatEl.textContent=''; sys('El chat ha sido borrado por un moderador'); return; }
+  const u=m.trailing.toLowerCase(); let n=0;
+  chatMsgs().forEach(d=>{ if(d.dataset.user===u){ markDeleted(d); n++; } });
+  const name=(chatters.get && chatters.get(u) && chatters.get(u).name) || m.trailing;
+  const dur=m.tags['ban-duration'];
+  sys(dur ? T('{n} ha sido expulsado temporalmente ({d})').replace('{n}',name).replace('{d}',fmtBanDur(dur)) : T('{n} ha sido expulsado del canal').replace('{n}',name));
+}
+function onClearMsg(m){
+  const id=m.tags['target-msg-id']; if(!id) return;
+  const d=chatMsgs().find(x=>x.dataset.id===id); if(d) markDeleted(d);
 }
 
 // ---------- IRC ----------
@@ -1453,7 +1482,8 @@ function connect(){
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
       case 'USERNOTICE': showNotice(m); break;
       case 'USERSTATE': me.badges = m.tags.badges; me.badgeInfo = m.tags['badge-info']; me.color = m.tags.color || me.color; me.name = m.tags['display-name'] || me.name; break;
-      case 'CLEARCHAT': if(!m.trailing) { pushQ=[]; chatEl.textContent=''; sys('El chat ha sido borrado por un moderador'); } break;
+      case 'CLEARCHAT': onClearChat(m); break;
+      case 'CLEARMSG': onClearMsg(m); break;
       case 'NOTICE': sys(m.trailing); break;
     }
   });
@@ -1907,7 +1937,7 @@ async function loadRecentMessages(ch){
       const m = parse(l); if(m.cmd!=='PRIVMSG') continue; n++;
       showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes).concat(parseGifs(m.tags.gifs)),
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'],
-         t:+m.tags['tmi-sent-ts']||0, badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id'], old:true, target:frag, histStore:hs});
+         t:+m.tags['tmi-sent-ts']||0, badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id'], old:true, deleted:m.tags['rm-deleted']==='1', target:frag, histStore:hs});
     }
     if(!n || ch!==channel) return;
     const sep=document.createElement('div'); sep.className='histSep'; sep.textContent='Mensajes anteriores · ahora en directo ↓'; frag.appendChild(sep);
