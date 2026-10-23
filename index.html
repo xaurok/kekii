@@ -117,6 +117,10 @@ body.headerHidden header{display:none}
 /* A los pocos segundos se queda solo el icono; vuelve el texto al tocar el vídeo */
 #fsBtn.compact{padding:7px;gap:0}
 #fsBtn.compact span{max-width:0;opacity:0}
+/* Encogido molesta lo mínimo: casi sin fondo ni borde; el icono lleva sombra para verse sobre imágenes claras */
+#fsBtn.compact,body.fsChat #fsBtn.compact{background:rgba(0,0,0,.2);border-color:transparent;backdrop-filter:none;opacity:.85}
+#fsBtn.compact svg{filter:drop-shadow(0 0 2px rgba(0,0,0,.9)) drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+#fsBtn{transition:background .3s,border-color .3s,opacity .3s}
 body.watching:not(.mini) #fsBtn{display:inline-flex}
 /* Dentro del modo, «Salir»: fondo semitransparente, sin verde y con flecha de volver (distinto de «Con chat») */
 body.fsChat #fsBtn{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.35)}
