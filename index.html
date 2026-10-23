@@ -1212,8 +1212,19 @@ chatEl.addEventListener('scroll',()=>{
   $('paused').style.display = stick ? 'none' : 'block';
 });
 $('paused').onclick = ()=>{ chatEl.scrollTop = chatEl.scrollHeight; };
+// Los mensajes que llegan a la vez se pintan juntos, una vez por fotograma (chats muy rápidos)
+let pushQ=[], pushT=0;
 function push(el){
-  chatEl.appendChild(el);
+  pushQ.push(el);
+  if(pushQ.length > MAX) pushQ.splice(0, pushQ.length-MAX);
+  if(pushT) return;
+  pushT = document.hidden ? setTimeout(flushPush, 300) : requestAnimationFrame(flushPush);
+}
+function flushPush(){
+  pushT=0; if(!pushQ.length) return;
+  const frag=document.createDocumentFragment(); pushQ.forEach(e=>frag.appendChild(e)); pushQ=[];
+  chatEl.appendChild(frag);
+  // (si estás leyendo más arriba, el navegador mantiene en su sitio lo que estás viendo al quitar los antiguos)
   while(chatEl.children.length > MAX) chatEl.firstChild.remove();
   if(stick) chatEl.scrollTop = chatEl.scrollHeight;
 }
@@ -1396,7 +1407,7 @@ function connect(){
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
       case 'USERNOTICE': showNotice(m); break;
       case 'USERSTATE': me.badges = m.tags.badges; me.badgeInfo = m.tags['badge-info']; me.color = m.tags.color || me.color; me.name = m.tags['display-name'] || me.name; break;
-      case 'CLEARCHAT': if(!m.trailing) { chatEl.textContent=''; sys('El chat ha sido borrado por un moderador'); } break;
+      case 'CLEARCHAT': if(!m.trailing) { pushQ=[]; chatEl.textContent=''; sys('El chat ha sido borrado por un moderador'); } break;
       case 'NOTICE': sys(m.trailing); break;
     }
   });
@@ -1416,7 +1427,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  pushQ=[]; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
@@ -2327,7 +2338,7 @@ function expandMini(push=true){
 function stopStream(){
   document.body.classList.remove('mini','watching');
   if(ws){ ws.onclose=null; ws.close(); ws=null; }
-  channel=''; tPlayer=null; $('playerSlot').innerHTML=''; chatEl.textContent='';
+  channel=''; tPlayer=null; $('playerSlot').innerHTML=''; pushQ=[]; chatEl.textContent='';
   const wrap=$('playerWrap'); wrap.style.left=wrap.style.top=wrap.style.right=wrap.style.bottom='';
 }
 $('miniClose').addEventListener('click', e=>{ e.stopPropagation(); stopStream(); });
