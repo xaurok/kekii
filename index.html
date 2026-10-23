@@ -170,6 +170,14 @@ body.homeView main{display:none}
 .msg:not(.sys):hover{background:var(--field)}
 .msg.sel{background:var(--field)}
 .replyTo{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px}
+.replyTo.thr{cursor:pointer}.replyTo.thr::before{content:"↳ ";color:var(--accent)}
+.thList{display:flex;flex-direction:column;margin-top:8px}
+.thRow{padding:10px 4px;border-bottom:1px solid var(--line)}
+.thRow.root{background:rgba(47,209,169,.07);border-left:3px solid var(--accent);border-radius:8px;padding-left:10px;margin-bottom:4px}
+.thRow.missing .tx{color:var(--muted);font-style:italic}
+.thTop{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.thRow .tn{font-weight:700}.thRow .tt{font-size:12px;color:var(--muted);flex:none}
+.thRow .tx{margin-top:3px;line-height:1.45;overflow-wrap:anywhere}
 .replyTo::before{content:"↳ "}
 #replyBar{display:flex;align-items:center;gap:8px;padding:6px 10px 0;font-size:13px;color:var(--muted);min-width:0}
 #replyBar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -651,7 +659,7 @@ const EN = {
  'Usuarios del chat':'Chat users','Personas que han escrito en el chat desde que entraste (incluidos los mensajes anteriores).':'People who have written in chat since you joined (including earlier messages).','Buscar usuario':'Search user','En el chat':'In chat','Nadie con ese nombre ha escrito todavía.':'Nobody with that name has written yet.','Todavía no ha escrito nadie.':'Nobody has written yet.','mensaje':'message','mensajes':'messages',
  'Informar de un problema':'Report a problem','Problema en Kekii':'Problem in Kekii','Cuéntanos qué ha pasado:':'Tell us what happened:','Datos para ayudarnos (puedes borrarlos si quieres):':'Details to help us (you can delete them if you like):',
  'En iPhone, la ventana flotante puede funcionar de otra forma o no estar disponible. Si no te funciona, avísanos desde «Informar de un problema».':'On iPhone, the floating window may work differently or not be available. If it doesn’t work for you, let us know with “Report a problem”.',
- 'Otros':'Other',
+ 'Otros':'Other','Conversación':'Conversation','Ver conversación':'View conversation','Mensaje original':'Original message','El mensaje original ya no está en el chat.':'The original message is no longer in the chat.',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
  'Entra en un canal para cargar sus emotes':'Join a channel to load its emotes','Los emotes que uses aparecerán aquí.':'Emotes you use will show up here.',
@@ -1211,6 +1219,46 @@ function renderText(container, text, twEmotes, cheer){
     }
   }
 }
+// ---------- Conversaciones (hilos de respuestas) ----------
+const msgIndex = new Map(); // id -> mensaje
+const threads = new Map();  // id del mensaje original -> [ids de respuestas]
+let threadOpen = null;
+function indexMsg(m){
+  msgIndex.set(m.id, m);
+  if(msgIndex.size>3000){ const it=msgIndex.keys(); for(let i=0;i<500;i++) msgIndex.delete(it.next().value); }
+  if(m.root){ const a=threads.get(m.root)||[]; if(!a.includes(m.id)) a.push(m.id); threads.set(m.root,a);
+    if(threadOpen===m.root && !$('sheet').hidden) openThread(m.root, true); }
+}
+function threadRow(m, isRoot){
+  const row=document.createElement('div'); row.className='thRow'+(isRoot?' root':'');
+  const top=document.createElement('div'); top.className='thTop';
+  const n=document.createElement('span'); n.className='tn'; n.style.color=colorFor(m.name,m.color); n.textContent=m.name;
+  const tm=document.createElement('span'); tm.className='tt'; tm.textContent=fmtStamp(m.t);
+  top.append(n,tm);
+  const tx=document.createElement('div'); tx.className='tx'; renderText(tx, m.text, (m.emotes||[]).slice(), false);
+  row.append(top,tx); return row;
+}
+function openThread(rootId, refresh){
+  const sh=$('sheet'); const keep = refresh ? sh.scrollTop : 0;
+  if(!refresh) closeSheet();
+  sh.textContent=''; sh.hidden=false; $('sheetBg').hidden=false; threadOpen=rootId;
+  const grab=document.createElement('div'); grab.className='grab'; sh.appendChild(grab);
+  const ids=threads.get(rootId)||[];
+  const replies=ids.map(id=>msgIndex.get(id)).filter(Boolean).sort((a,b)=>a.t-b.t);
+  const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)';
+  h.textContent=T('Conversación')+' · '+(replies.length+(msgIndex.has(rootId)?1:0)); sh.appendChild(h);
+  const list=document.createElement('div'); list.className='thList';
+  const root=msgIndex.get(rootId);
+  if(root) list.appendChild(threadRow(root,true));
+  else { const first=replies.find(r=>r.parentId===rootId) || replies[0];
+    const ph=document.createElement('div'); ph.className='thRow root missing';
+    const n=document.createElement('div'); n.className='thTop'; const nn=document.createElement('span'); nn.className='tn'; nn.textContent=first&&first.parentName?('@'+first.parentName):T('Mensaje original'); n.appendChild(nn);
+    const tx=document.createElement('div'); tx.className='tx'; tx.textContent=(first&&first.parentId===rootId&&first.parentBody) ? first.parentBody : T('El mensaje original ya no está en el chat.');
+    ph.append(n,tx); list.appendChild(ph); }
+  replies.forEach(m=>list.appendChild(threadRow(m,false)));
+  sh.appendChild(list);
+  if(refresh) sh.scrollTop=keep;
+}
 // Mensajes ya mostrados (por su id) para no repetirlos al juntar historial y directo o al reconectar
 const seenMsg = new Set();
 let recentFor = '';
@@ -1219,7 +1267,10 @@ function showMsg(name,color,text,twEmotes,meta={}){
   const d=document.createElement('div'); d.className='msg';
   const userLogin = (meta.login || name).toLowerCase();
   noteChatter(userLogin, name, color, meta.t);
-  if(meta.parentName){ const r=document.createElement('span'); r.className='replyTo'; r.textContent='Respondiendo a @'+meta.parentName+': '+(meta.parentBody||''); d.appendChild(r); }
+  const root = meta.rootId || meta.parentId || null;
+  if(meta.parentName){ const r=document.createElement('span'); r.className='replyTo'; r.textContent='Respondiendo a @'+meta.parentName+': '+(meta.parentBody||'');
+    if(root){ r.classList.add('thr'); r.title=T('Ver conversación'); r.onclick=e=>{ e.stopPropagation(); openThread(root); }; }
+    d.appendChild(r); }
   const msgData={text, emotes:twEmotes, t:meta.t||Date.now()};
   if(meta.histStore){ const a=meta.histStore.get(userLogin)||[]; a.push(msgData); meta.histStore.set(userLogin,a); } else recordMsg(userLogin, msgData);
   if(meta.old) d.classList.add('old');
@@ -1235,6 +1286,7 @@ function showMsg(name,color,text,twEmotes,meta={}){
   if(meta.msgId==='highlighted-message'){ d.classList.add('highlighted'); const ht=document.createElement('span'); ht.className='hlTag'; ht.textContent='Mensaje destacado con puntos de canal'; d.insertBefore(ht, d.firstChild); }
   else if(meta.reward){ const ht=document.createElement('span'); ht.className='hlTag'; ht.textContent='Canjeó una recompensa del canal'; d.insertBefore(ht, d.firstChild); }
   renderText(t, body, twEmotes, !!meta.bits); t.className='mt'; t._r=[body, twEmotes, !!meta.bits]; d.appendChild(t);
+  if(meta.id) indexMsg({id:meta.id, name, color, login:userLogin, text:body, emotes:twEmotes, t:meta.t||Date.now(), root, parentName:meta.parentName, parentBody:meta.parentBody, parentId:meta.parentId});
   if(meta.target) meta.target.appendChild(d); else push(d);
 }
 
@@ -1273,7 +1325,7 @@ function connect(){
       case 'PING': ws.send('PONG :'+m.trailing); break;
       case 'ROOMSTATE': if(m.tags['room-id'] && !ws.loaded7){ ws.loaded7=true; roomId=m.tags['room-id']; loadChannel7tv(roomId); loadChannelBttvFfz(roomId); loadTwitchEmotes(); loadBadges(); loadCheermotes(); } break;
       case 'PRIVMSG': showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes),
-        {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
+        {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
       case 'USERNOTICE': showNotice(m); break;
       case 'USERSTATE': me.badges = m.tags.badges; me.badgeInfo = m.tags['badge-info']; me.color = m.tags.color || me.color; me.name = m.tags['display-name'] || me.name; break;
       case 'CLEARCHAT': if(!m.trailing) { chatEl.textContent=''; sys('El chat ha sido borrado por un moderador'); } break;
@@ -1296,7 +1348,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  chatEl.textContent=''; userHist.clear(); seenMsg.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); sys('Toca ▶ en el reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
@@ -1414,7 +1466,7 @@ $('send').addEventListener('submit', e=>{
   if(!t || !ws || ws.readyState!==1 || !token) return;
   if(replyTo){ ws.send(`@reply-parent-msg-id=${replyTo.id} PRIVMSG #${channel} :${t}`); }
   else ws.send(`PRIVMSG #${channel} :${t}`);
-  showMsg(me.name||login, me.color, t, ownTwitchEmotes(t), {login, badges: me.badges, badgeInfo: me.badgeInfo, parentName: replyTo && replyTo.name, parentBody: replyTo && replyTo.text}); // Twitch no devuelve tus propios mensajes
+  showMsg(me.name||login, me.color, t, ownTwitchEmotes(t), {id:'own-'+Date.now(), login, badges: me.badges, badgeInfo: me.badgeInfo, parentName: replyTo && replyTo.name, parentBody: replyTo && replyTo.text, parentId: replyTo && replyTo.id, rootId: replyTo && ((msgIndex.get(replyTo.id)||{}).root || replyTo.id)}); // Twitch no devuelve tus propios mensajes
   setReply(null); $('mentionBar').hidden=true;
   $('text').value=''; $('picker').classList.remove('open');
 });
@@ -1731,7 +1783,7 @@ async function loadRecentMessages(ch){
     for(const l of lines){
       const m = parse(l); if(m.cmd!=='PRIVMSG') continue; n++;
       showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes),
-        {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'],
+        {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'],
          t:+m.tags['tmi-sent-ts']||0, badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id'], old:true, target:frag, histStore:hs});
     }
     if(!n || ch!==channel) return;
@@ -1818,7 +1870,7 @@ function setReply(r){
   $('text').focus();
 }
 $('replyCancel').onclick = ()=>setReply(null);
-function closeSheet(){ $('sheet').classList.remove('chanProf'); $('sheet').hidden=true; $('sheetBg').hidden=true; document.querySelectorAll('.msg.sel').forEach(e=>e.classList.remove('sel')); }
+function closeSheet(){ threadOpen=null; $('sheet').classList.remove('chanProf'); $('sheet').hidden=true; $('sheetBg').hidden=true; document.querySelectorAll('.msg.sel').forEach(e=>e.classList.remove('sel')); }
 $('sheetBg').onclick = closeSheet;
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('sheet').hidden) closeSheet(); });
 function fmtDate(iso){ try{ return new Date(iso).toLocaleDateString(LOC,{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } }
@@ -1842,6 +1894,8 @@ async function openSheet(info, el){
   const btn=(label, fn, cls)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=label; if(cls) b.className=cls; b.onclick=()=>{ fn(); }; acts.appendChild(b); return b; };
   const canWrite = !!token;
   if(info.id && canWrite) btn('Responder', ()=>{ closeSheet(); setReply({id:info.id, name:info.name, text:info.text}); }, 'primary');
+  { const mi=info.id && msgIndex.get(info.id); const rid = mi ? (mi.root || (threads.has(info.id) ? info.id : null)) : null;
+    if(rid) btn('Ver conversación', ()=>openThread(rid)); }
   if(canWrite) btn('Mencionar', ()=>{ closeSheet(); const t=$('text'); t.value=(t.value&&!t.value.endsWith(' ')?t.value+' ':t.value)+'@'+info.name+' '; t.focus(); });
   if(info.text) btn('Copiar mensaje', async ()=>{ try{ await navigator.clipboard.writeText(info.text); toast('Mensaje copiado'); }catch(e){ toast('No se pudo copiar'); } closeSheet(); });
   if(canWhisper() && info.login!==login) btn('Enviar susurro', ()=>{ closeSheet(); openActivity('whispers', info.login); openConvo(info.login); });
