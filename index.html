@@ -87,7 +87,14 @@ body.headerHidden header{display:none}
 .iconBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 8px;border-radius:8px;border:0;background:none;color:var(--fg);font-size:13px}
 .iconBtn:hover{background:var(--field)}
 #hideChatBtn{display:none}
-#chatToggle{display:none;position:absolute;right:calc(10px + env(safe-area-inset-right,0px));top:10px;z-index:5;
+/* Pantalla completa con chat (botón propio de Kekii, con texto para no confundirlo con el ⛶ de Twitch) */
+#fsBtn{display:none;position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));z-index:6;
+  align-items:center;gap:6px;padding:6px 11px 6px 9px;border-radius:999px;border:1.5px solid var(--accent);background:rgba(0,0,0,.6);color:#fff;
+  font:700 13px var(--font,inherit);backdrop-filter:blur(6px);cursor:pointer;-webkit-tap-highlight-color:transparent}
+#fsBtn svg{color:var(--accent)}
+body.watching:not(.mini) #fsBtn{display:inline-flex}
+body.fsChat #fsBtn{opacity:.75}
+#chatToggle{display:none;position:absolute;right:calc(10px + env(safe-area-inset-right,0px));top:54px;z-index:5;
   align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:700;backdrop-filter:blur(6px)}
 #chatCol{width:360px;display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--panel);min-height:0}
 #chat{flex:1;overflow-y:auto;padding:6px 12px;overscroll-behavior:contain}
@@ -588,7 +595,7 @@ main.snap{transition:transform .22s ease-out}
   </div>
 </section>
 <main>
-  <div id="playerWrap"><div id="playerSlot"></div><div id="tapShield" aria-hidden="true"></div>
+  <div id="playerWrap"><div id="playerSlot"></div><div id="tapShield" aria-hidden="true"></div><button type="button" id="fsBtn" aria-label="Pantalla completa con chat"></button>
     <div id="miniBar"><span id="miniName"></span><button id="miniClose" type="button" aria-label="Cerrar directo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <button id="chatToggle" type="button" aria-label="Mostrar chat"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10h.01M12 10h.01M15 10h.01" stroke-linecap="round" stroke-width="2.6"/></svg>Chat</button></div>
   <div id="chatCol">
@@ -659,7 +666,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -760,7 +767,7 @@ const EN = {
  '¿No aparece «Instalar app»? Si estás en modo incógnito, ábrela en una pestaña normal.':'Don’t see “Install app”? If you’re in incognito mode, open it in a normal tab.',
  'Hay una nueva versión de Kekii':'A new version of Kekii is available','Actualizar':'Update','Actualizando…':'Updating…',
  'Sigue viendo el directo fuera de la app':'Keep watching outside the app','El directo sigue sonando en una ventanita flotante mientras usas otras apps.':'The stream keeps playing in a small floating window while you use other apps.',
- 'Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.':'Put the stream in <b>full screen</b> with the player’s <span class="kbd">⛶</span> button.',
+ 'Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor de Twitch, abajo a la derecha (no el botón «Con chat» de Kekii).':'Put the stream in <b>full screen</b> with the Twitch player’s <span class="kbd">⛶</span> button, bottom right (not Kekii’s “With chat” button).',
  'Toca el botón de <b>imagen en imagen</b> <span class="kbd">⧉</span> que aparece arriba.':'Tap the <b>picture-in-picture</b> <span class="kbd">⧉</span> button at the top.',
  'Sal de la app: el directo seguirá en una ventanita flotante.':'Leave the app: the stream will keep going in a small floating window.',
  'Sal con el botón o el gesto de <b>inicio</b> (no con "atrás").':'Leave with the <b>home</b> button or gesture (not “back”).',
@@ -2364,6 +2371,26 @@ addSwipe($('actBody'),
 
 
 // ---------- Minirreproductor ----------
+// ---------- Pantalla completa con chat: Kekii entera (vídeo + chat al lado), en horizontal en el móvil ----------
+const FS_IN='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V4h4M21 8V4h-4M3 16v4h4M21 16v4h-4"/><path d="M14 9h4v5h-2l-2 2z"/></svg>';
+const FS_OUT='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4H4M16 3v4h4M8 21v-4H4M16 21v-4h4"/></svg>';
+function fsUi(){ const on=document.body.classList.contains('fsChat'); const b=$('fsBtn');
+  b.innerHTML=(on?FS_OUT:FS_IN)+'<span>'+T(on?'Salir':'Con chat')+'</span>'; b.setAttribute('aria-label', T(on?'Salir de pantalla completa':'Pantalla completa con chat')); }
+async function toggleFsChat(){
+  if(document.fullscreenElement || document.webkitFullscreenElement){ try{ await (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} return; }
+  const el=document.documentElement; const req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(!req){ toast(T('Tu navegador no permite pantalla completa aquí')); return; }
+  try{ await req.call(el,{navigationUI:'hide'}); }catch(e){ toast(T('Tu navegador no permite pantalla completa aquí')); return; }
+  document.body.classList.add('fsChat'); document.body.classList.remove('chatHidden'); fsUi();
+  if(IS_MOBILE){ try{ await screen.orientation.lock('landscape'); }catch(e){} }
+}
+function onFsChange(){
+  const fe=document.fullscreenElement||document.webkitFullscreenElement;
+  if(!fe && document.body.classList.contains('fsChat')){ document.body.classList.remove('fsChat'); try{ screen.orientation.unlock(); }catch(e){} fsUi(); }
+}
+document.addEventListener('fullscreenchange', onFsChange); document.addEventListener('webkitfullscreenchange', onFsChange);
+$('fsBtn').onclick=e=>{ e.stopPropagation(); toggleFsChat(); };
+fsUi();
 // En el ordenador el directo arranca solo; en el móvil espera a tu toque (si arranca solo, se pausa al cambiar de tamaño)
 function autoStart(){ return !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !(/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints>1); }
 // Reproductor con la API oficial de Twitch, para poder reanudarlo si se pausa solo
@@ -3151,11 +3178,11 @@ function openPipGuide(){
   const ol=document.createElement('ol'); ol.className='instSteps';
   const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=T(html); li.appendChild(sp); ol.appendChild(li); };
   if(ios){
-    step('Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.');
+    step('Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor de Twitch, abajo a la derecha (no el botón «Con chat» de Kekii).');
     step('Toca el botón de <b>imagen en imagen</b> <span class="kbd">⧉</span> que aparece arriba.');
     step('Sal de la app: el directo seguirá en una ventanita flotante.');
   } else {
-    step('Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor.');
+    step('Pon el directo a <b>pantalla completa</b> con el botón <span class="kbd">⛶</span> del reproductor de Twitch, abajo a la derecha (no el botón «Con chat» de Kekii).');
     step('Sal con el botón o el gesto de <b>inicio</b> (no con "atrás").');
     step('El directo pasa a una <b>ventanita flotante</b> y sigue sonando.');
   }
