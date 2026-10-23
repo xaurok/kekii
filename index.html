@@ -96,7 +96,13 @@ form{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
 #picker.open{display:flex}
 .emHead{display:flex;gap:6px;padding:8px 8px 4px}
 #emSearch{flex:1;padding:7px 10px}
-#emList{overflow-y:auto;padding:0 6px 8px;min-height:0}
+#emList{overflow-y:auto;padding:0 6px 8px;min-height:0;position:relative}
+.subsWrap{display:grid;grid-template-columns:44px minmax(0,1fr);gap:6px;position:relative}
+.subsRail{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;gap:6px;padding:8px 0;max-height:min(230px,36vh);overflow-y:auto;scrollbar-width:none}
+.subsRail::-webkit-scrollbar{display:none}
+.subsRail button{width:40px;height:40px;flex:none;border-radius:50%;padding:0;border:2px solid transparent;background:var(--field);color:var(--fg);font-weight:700;overflow:hidden;cursor:pointer}
+.subsRail button img{width:100%;height:100%;object-fit:cover;display:block}
+.subsRail button.on{border-color:var(--accent)}
 .emSec{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 4px 4px}
 .emGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:2px}
 .emCell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;border:0;background:none;border-radius:8px;min-width:0}
@@ -644,6 +650,7 @@ const EN = {
  'Usuarios del chat':'Chat users','Personas que han escrito en el chat desde que entraste (incluidos los mensajes anteriores).':'People who have written in chat since you joined (including earlier messages).','Buscar usuario':'Search user','En el chat':'In chat','Nadie con ese nombre ha escrito todavía.':'Nobody with that name has written yet.','Todavía no ha escrito nadie.':'Nobody has written yet.','mensaje':'message','mensajes':'messages',
  'Informar de un problema':'Report a problem','Problema en Kekii':'Problem in Kekii','Cuéntanos qué ha pasado:':'Tell us what happened:','Datos para ayudarnos (puedes borrarlos si quieres):':'Details to help us (you can delete them if you like):',
  'En iPhone, la ventana flotante puede funcionar de otra forma o no estar disponible. Si no te funciona, avísanos desde «Informar de un problema».':'On iPhone, the floating window may work differently or not be available. If it doesn’t work for you, let us know with “Report a problem”.',
+ 'Otros':'Other',
  'BTTV del canal':'BTTV channel','FFZ del canal':'FFZ channel','BTTV globales':'BTTV global','FFZ globales':'FFZ global',
  'Usuario':'User','Perfil':'Profile','Mis subs':'My subs','Globales':'Global','Del canal':'Channel','Resultados':'Results',
  'Entra en un canal para cargar sus emotes':'Join a channel to load its emotes','Los emotes que uses aparecerán aquí.':'Emotes you use will show up here.',
@@ -1009,7 +1016,7 @@ const twUrl = (id, animated)=>`https://static-cdn.jtvnw.net/emoticons/v2/${id}/$
 async function loadTwitchEmotes(){
   if(!token || !me.id || twEmLoadedFor===roomId) return;
   twEmLoadedFor = roomId; twEm.clear();
-  const add=(e, src)=>{ if(e.emote_type==='smilies' || twEm.has(e.name)) return; twEm.set(e.name,{id:e.id, url:twUrl(e.id, (e.format||[]).includes('animated')), src}); };
+  const add=(e, src)=>{ if(e.emote_type==='smilies' || twEm.has(e.name)) return; twEm.set(e.name,{id:e.id, url:twUrl(e.id, (e.format||[]).includes('animated')), src, owner:e.owner_id}); };
   try{
     if((me.scopes||[]).includes('user:read:emotes')){
       let cursor='', pages=0;
@@ -1026,6 +1033,39 @@ async function loadTwitchEmotes(){
     }
   }catch(e){}
   renderPicker();
+  loadEmoteOwners();
+}
+// Nombre y foto de los canales de tus emotes de suscripción (para separarlos por canal)
+const emOwners = new Map(); // id -> {name, img}
+async function loadEmoteOwners(){
+  const ids=[...new Set([...twEm.values()].filter(e=>e.src==='tw-otros' && e.owner && e.owner!=='0' && !emOwners.has(e.owner)).map(e=>e.owner))];
+  for(let i=0;i<ids.length;i+=100){
+    try{ (await helix('users?'+ids.slice(i,i+100).map(x=>'id='+x).join('&'))).forEach(u=>emOwners.set(u.id,{name:u.display_name, img:u.profile_image_url})); }catch(e){}
+  }
+  if(ids.length) renderPicker();
+}
+function renderSubs(list, out){
+  const groups=new Map();
+  list.forEach(it=>{ const k=it[1].owner||'?'; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(it); });
+  if(groups.size<=1){ emSection(list,'',out); return; }
+  const nameOf=k=>(emOwners.get(k)||{}).name || T('Otros');
+  const keys=[...groups.keys()].sort((a,b)=>nameOf(a).localeCompare(nameOf(b),LOC));
+  const wrap=document.createElement('div'); wrap.className='subsWrap';
+  const rail=document.createElement('div'); rail.className='subsRail';
+  const body=document.createElement('div'); body.className='subsBody';
+  const btns=[], secs=[];
+  keys.forEach(k=>{
+    const info=emOwners.get(k);
+    const b=document.createElement('button'); b.type='button'; b.title=nameOf(k); b.setAttribute('aria-label',nameOf(k));
+    if(info && info.img){ const i=document.createElement('img'); i.src=info.img; i.alt=''; i.loading='lazy'; b.appendChild(i); } else b.textContent=nameOf(k).slice(0,1).toUpperCase();
+    const sec=document.createElement('div'); sec.className='subsSec'; emSection(groups.get(k), nameOf(k), sec);
+    b.onclick=()=>{ out.scrollTo({top: wrap.offsetTop + sec.offsetTop - 2, behavior:'smooth'}); };
+    rail.appendChild(b); body.appendChild(sec); btns.push(b); secs.push(sec);
+  });
+  wrap.append(rail, body); out.appendChild(wrap);
+  const mark=()=>{ const y=out.scrollTop - wrap.offsetTop + 12; let cur=0; secs.forEach((sc,i)=>{ if(sc.offsetTop<=y) cur=i; });
+    btns.forEach((b,i)=>b.classList.toggle('on', i===cur)); };
+  out.onscroll=mark; mark();
 }
 function allEmotes(){ return new Map([...twEm, ...emotes7]); }
 // Para tus propios mensajes: Twitch no los devuelve, así que marcamos aquí sus emotes
@@ -1099,7 +1139,9 @@ function renderPicker(){
   });
   const cur=tabs.find(t=>t.k===emTab);
   if(cur.k==='recent' && !recent.length){ const d=document.createElement('div'); d.className='emNone'; d.textContent='Los emotes que uses aparecerán aquí.'; out.appendChild(d); }
-  cur.sections.forEach(([title,list])=>emSection(list, title, out));
+  out.onscroll=null;
+  if(cur.k==='subs') renderSubs(cur.sections[0][1], out);
+  else cur.sections.forEach(([title,list])=>emSection(list, title, out));
   const sel=bar.querySelector('[aria-selected="true"]'); if(sel) sel.scrollIntoView({block:'nearest',inline:'nearest'});
   if(token && !(me.scopes||[]).includes('user:read:emotes')){ const d=document.createElement('div'); d.className='emNone'; d.textContent='Vuelve a iniciar sesión para ver también tus emotes de suscripción de Twitch.'; out.appendChild(d); }
   if(!token){ const d=document.createElement('div'); d.className='emNone'; d.textContent='Inicia sesión para ver tus emotes de Twitch.'; out.appendChild(d); }
