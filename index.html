@@ -2549,6 +2549,13 @@ function createPlayer(c){
           if((lag!=null && lag>4) || (lag==null && waited>8)) jumpLive(true);
         }, 1500);
       });
+      // En la ventanita del inicio no puedes pausar tú (no recibe toques): si Twitch la pausa, insistimos un rato
+      if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
+        if(c!==channel || !document.body.classList.contains('mini') || Date.now()-pauseIntentAt<3000) return;
+        diag('ventanita pausada por Twitch → reintento');
+        [300,1000,2000,3500,5500,8000,11000].forEach(ms=>setTimeout(()=>{ try{
+          if(tPlayer && c===channel && document.body.classList.contains('mini') && tPlayer.isPaused()){ tPlayer.play(); diag('ventanita: play ('+ms+' ms)'); } }catch(e){} }, ms));
+      });
       // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
       if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
         if(c!==channel || Date.now()-shieldBackAt>8000) return;
