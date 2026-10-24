@@ -1639,7 +1639,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  hideJumpHint(); pushQ=[]; chatEmUse=[]; stick=true; $('paused').style.display='none'; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  hideJumpHint(); jumpWait=null; pushQ=[]; chatEmUse=[]; stick=true; $('paused').style.display='none'; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
@@ -2541,6 +2541,11 @@ function createPlayer(c){
       finally{ document.createElement=origCreate; }
       if(DIAG) ['READY','PLAY','PLAYING','PAUSE','ENDED','ONLINE','OFFLINE','PLAYBACK_BLOCKED','SEEK'].forEach(k=>{ if(Twitch.Player[k]) tPlayer.addEventListener(Twitch.Player[k], ()=>diag('evento '+k+' · encima: '+diagCover()+' · clases: '+['noShieldTmp','noShield','fsChat'].filter(c=>document.body.classList.contains(c)).join(',')+' · '+(matchMedia('(orientation:landscape)').matches?'horizontal':'vertical'))); });
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
+        if(jumpWait){
+          const auto=!iframeTapped && jumpWait.forced<1 && Date.now()-jumpWait.at<8000;
+          if(auto){ jumpWait.forced++; diag('Twitch arrancó solo tras el salto → pausa para que lo toques tú'); try{ tPlayer.pause(); }catch(e){} return; }
+          jumpWait=null;
+        }
         hideJumpHint();
         if(document.body.classList.contains('noShieldTmp')){ clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 1500); }
         if(!firstPlay || c!==channel) return; firstPlay=false;
@@ -2581,6 +2586,8 @@ function jumpLive(silent){
   // En el móvil: recargamos en el momento actual y esperamos tu toque en ▶. Si Kekii lo reanudara solo, Twitch lo
   // trataría como «arrancado por la web» y pausaría con cualquier cosa (ventanita, pantalla completa, fichas…)
   if(!autoStart()){
+    jumpWait={at:Date.now(), forced:0}; iframeTapped=false;
+    try{ if(document.activeElement && document.activeElement.tagName==='IFRAME') document.activeElement.blur(); }catch(e){}
     document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); // sin capa, para poder tocar el ▶ grande
     try{ tPlayer.pause(); }catch(e){}
     setTimeout(()=>{ try{ tPlayer.setChannel(channel); }catch(e){} }, 250);
@@ -2595,6 +2602,10 @@ function jumpLive(silent){
   // Si el navegador no deja reanudarlo solo, avisamos en vez de dejarlo parado sin más
   setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) toast(T('Toca ▶ para continuar el directo')); }catch(e){} }, 6800);
 }
+// Tras un salto en el móvil esperamos a que toques ▶. Si Twitch arranca solo al recargar (pasa si ya lo habías tocado
+// antes), lo pausamos una vez: si siguiera «arrancado por la web», pausaría luego en la ventanita, pantalla completa…
+let jumpWait=null, iframeTapped=false;
+addEventListener('blur', ()=>setTimeout(()=>{ if(document.activeElement && document.activeElement.tagName==='IFRAME') iframeTapped=true; }, 0));
 function showJumpHint(){ hideJumpHint(); const d=document.createElement('div'); d.id='jumpHint'; d.setAttribute('role','status');
   d.textContent=T('Ya estás en directo · toca ▶ en el vídeo'); document.body.appendChild(d); jumpLive._h=setTimeout(hideJumpHint, 20000); }
 function hideJumpHint(){ clearTimeout(jumpLive._h); const d=$('jumpHint'); if(d) d.remove(); }
