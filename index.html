@@ -2568,7 +2568,7 @@ function createPlayer(c){
       });
       // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
       if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
-        if(c!==channel || Date.now()-shieldBackAt>8000) return;
+        if(c!==channel || jumpWait || Date.now()-shieldBackAt>8000) return;
         shieldBackAt=0; document.body.classList.add('noShield'); diag('Twitch pausó al volver la capa → la quito y reanudo');
         [100, 700, 1500, 2500].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
       });
@@ -2586,7 +2586,7 @@ function jumpLive(silent){
   // En el móvil: recargamos en el momento actual y esperamos tu toque en ▶. Si Kekii lo reanudara solo, Twitch lo
   // trataría como «arrancado por la web» y pausaría con cualquier cosa (ventanita, pantalla completa, fichas…)
   if(!autoStart()){
-    jumpWait={at:Date.now(), forced:0}; iframeTapped=false;
+    jumpWait={at:Date.now(), forced:0}; iframeTapped=false; shieldBackAt=0; // la pausa del salto es nuestra: que nadie la «arregle»
     try{ if(document.activeElement && document.activeElement.tagName==='IFRAME') document.activeElement.blur(); }catch(e){}
     document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); // sin capa, para poder tocar el ▶ grande
     try{ tPlayer.pause(); }catch(e){}
