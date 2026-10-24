@@ -523,6 +523,8 @@ body.chanCollapsed #chanMore{display:none}
 body.homeView.mini main{display:flex;flex:0 0 0;min-height:0;overflow:visible}
 body.mini #chatCol{display:none}
 body.mini{--miniW:min(56vw,330px)}
+/* Con la ventanita en el inicio, los avisos salen encima de ella y no sobre el vídeo */
+body.mini #toast{bottom:calc(var(--miniW) * 9 / 16 + 60px + env(safe-area-inset-bottom,0px))}
 body.mini #playerWrap{position:fixed;z-index:50;right:max(6px, env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));
   width:var(--miniW);height:calc(var(--miniW) * 9 / 16 + 36px);aspect-ratio:auto;flex:none;border-radius:0 0 12px 12px;overflow:hidden;
   box-shadow:0 0 0 1px var(--line),0 10px 30px rgba(0,0,0,.65);border:0;touch-action:none;cursor:pointer;display:block;background:#000}
@@ -1745,6 +1747,8 @@ chIn.addEventListener('keydown', e=>{
 
 function sendChat(){
   const t=$('text').value.trim();
+  { const m=/^\/mini\s+(\d{3})$/i.exec(t); if(m){ $('text').value=''; const w=+m[1];
+      document.body.style.setProperty('--miniW', w+'px'); sys('Ventanita a '+w+' px de ancho para probar (se quita al cerrar la app).'); return; } }
   if(t==='/diag'){ DIAG=!DIAG; try{ localStorage.setItem('tw_diag', DIAG?'1':''); }catch(e){} $('text').value='';
     sys(DIAG?'Modo diagnóstico activado: entra de nuevo en el canal y pulsa ⏭. Escribe /diag otra vez para quitarlo.':'Modo diagnóstico desactivado.'); return; }
   if(!t || !ws || ws.readyState!==1 || !token) return;
