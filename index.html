@@ -3412,7 +3412,8 @@ function openPipGuide(){
   sh.appendChild(tips);
   { const n=document.createElement('p'); n.className='instNote'; n.style.textAlign='left';
     n.textContent = ios ? T('En iPhone, la ventana flotante puede funcionar de otra forma o no estar disponible. Si no te funciona, avísanos desde «Informar de un problema».')
-                        : T('¿No aparece la ventanita? Ve a Ajustes → Aplicaciones → Chrome → Imagen en imagen y actívalo.'); sh.appendChild(n); }
+                        : T('¿No aparece la ventanita? Ve a Ajustes → Aplicaciones → Chrome → Imagen en imagen y actívalo.')
+                            .replace('Chrome', ({samsung:'Samsung Internet',opera:'Opera',edge:'Edge',firefox:'Firefox',brave:'Brave'})[browserKind()]||'Chrome'); sh.appendChild(n); }
   const acts=document.createElement('div'); acts.className='acts'; acts.style.gridTemplateColumns='1fr';
   const ok=document.createElement('button'); ok.type='button'; ok.className='primary'; ok.textContent=T('Entendido'); ok.onclick=closeSheet;
   acts.appendChild(ok); sh.appendChild(acts);
