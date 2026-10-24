@@ -3578,8 +3578,8 @@ function openAbout(){
   const a=document.createElement('a'); a.href=PRIVACY_URL; a.target='_blank'; a.rel='noopener'; a.textContent='Política de privacidad';
   const w=document.createElement('a'); w.href='info.html'; w.target='_blank'; w.rel='noopener'; w.textContent='Página de Kekii';
   const c=document.createElement('button'); c.type='button'; c.textContent='Cerrar'; c.onclick=closeSheet;
-  acts.append(w,a,c); sh.appendChild(acts);
   const ads=document.createElement('button'); ads.type='button'; ads.className='aboutLink'; ads.textContent=T('¿Por qué veo anuncios aunque esté suscrito?'); ads.onclick=openAdsHelp; sh.appendChild(ads);
+  acts.append(w,a,c); sh.appendChild(acts);
 }
 function openAdsHelp(){
   closeSheet();
