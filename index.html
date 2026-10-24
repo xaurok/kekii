@@ -355,6 +355,8 @@ body.homeView main{display:none}
 
 /* ---------- Historial de usuario ---------- */
 .msg.old{opacity:.6}
+.atLink{font-weight:700;cursor:pointer;border-radius:4px}
+.atLink:hover{text-decoration:underline}
 .msg.deleted .mt{display:none}
 .msg.deleted.reveal .mt{display:inline;opacity:.55;text-decoration:line-through}
 .delTag{color:var(--muted);font-style:italic;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -1473,10 +1475,20 @@ function renderText(container, text, twEmotes, cheer){
         else { last = emoteNode(e7.url,w,e7.src); container.appendChild(last); }
       } else if(w){
         if(/\S/.test(w)) last = null;
+        // @menciones: tócalas para ver la ficha de esa persona
+        const at=/^@([A-Za-z0-9_]{2,25})(.*)$/.exec(w);
+        if(at){ container.appendChild(atLink(at[1])); if(at[2]) container.appendChild(document.createTextNode(at[2])); continue; }
         container.appendChild(document.createTextNode(w));
       }
     }
   }
+}
+function atLink(name){
+  const a=document.createElement('span'); a.className='atLink'; a.textContent='@'+name; a.setAttribute('role','button');
+  const l=name.toLowerCase(); let c=null; try{ const ch=chatters.get(l); if(ch){ c=ch.color; name=ch.name||name; } }catch(e){}
+  if(c) a.style.color=c;
+  a.onclick=e=>{ e.stopPropagation(); openSheet({login:l, name, color:c}); };
+  return a;
 }
 // ---------- Conversaciones (hilos de respuestas) ----------
 const msgIndex = new Map(); // id -> mensaje
