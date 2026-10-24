@@ -774,7 +774,7 @@ const EN = {
  'Nombre copiado: elige "Regalar a alguien" y pégalo':'Name copied: choose "Gift to someone" and paste it',
  'Mensajes en este chat':'Messages in this chat','No hay mensajes suyos desde que entraste.':'No messages from them since you joined.','Ver historial completo':'See full history',
  'Cargar mes anterior':'Load previous month','No hay más historial.':'No more history.','No se pudo cargar el historial ahora mismo.':"Couldn't load the history right now.",
- 'Este canal no tiene historial público guardado, así que solo se ven los mensajes desde que entraste.':"This channel has no public log, so you only see messages since you joined.",
+ 'Este canal no está en el archivo público de mensajes, así que solo ves lo que esta persona ha escrito desde que entraste.':"This channel isn’t in the public message archive, so you only see what this person has written since you joined.",
  'Cargando…':'Loading…','Cargando clips…':'Loading clips…','Compartir':'Share','Compartir clip':'Share clip','Canal':'Channel','Twitch':'Twitch','Cerrar':'Close','Cerrar clips':'Close clips',
  'Abrir en Twitch para dar me gusta o comentar':'Open in Twitch to like or comment','Cerrar directo':'Close stream','Volver':'Back','Volver a categorías':'Back to categories','Cerrar vídeo':'Close video','Vídeo':'Video',
  'Inicia sesión para ver quién está en directo y los canales que sigues.':'Log in to see who is live and the channels you follow.',
@@ -2155,7 +2155,7 @@ function buildUserHistory(userLogin){
     }catch(e){
       more.remove();
       info.textContent = e.message==='nolog'
-        ? 'Este canal no tiene historial público guardado, así que solo se ven los mensajes desde que entraste.'
+        ? 'Este canal no está en el archivo público de mensajes, así que solo ves lo que esta persona ha escrito desde que entraste.'
         : 'No se pudo cargar el historial ahora mismo.';
     }
   };
