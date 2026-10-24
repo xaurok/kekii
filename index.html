@@ -222,6 +222,8 @@ body.homeView main{display:none}
 .logo{cursor:pointer;background:none;border:0;padding:0;color:var(--fg)}
 .homeInner{max-width:1400px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
 .tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+/* Las pestañas del inicio se quedan arriba al bajar (como en la app de Twitch) */
+#home .tabs{position:sticky;top:-6px;z-index:5;background:var(--bg);padding-top:6px}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none}
 @media (max-width:420px){.tab{font-size:16px}.tabs{gap:16px}}
