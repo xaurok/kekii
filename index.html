@@ -73,6 +73,8 @@ button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(
 @media (min-width:821px),(orientation:landscape) and (max-height:560px){ body:not(.chatHidden) #jumpHint{left:auto;right:12px;transform:none;white-space:normal;max-width:calc(var(--chatW,340px) - 24px)} }
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:14px;z-index:50}
 #sendAs{font-size:12px;color:var(--muted);padding:6px 10px 0}
+#roomMode{font-size:12px;color:#f0c674;padding:6px 10px 0;display:flex;flex-wrap:wrap;gap:4px 10px}
+#roomMode[hidden]{display:none}
 #sendAs b{color:var(--accent)}
 main{flex:1;display:flex;min-height:0}
 /* z-index: el vídeo siempre por encima del chat. Si el chat (que va después) quedara pintado encima aunque sea un
@@ -706,6 +708,7 @@ main.snap{transition:transform .22s ease-out}
     <div id="chat"></div>
     <div id="paused">Chat pausado · toca para bajar</div>
     <div id="picker"><div class="emHead"><input id="emSearch" type="search" placeholder="Buscar emote" autocomplete="off" autocapitalize="off" spellcheck="false"></div><div id="emTabs" role="tablist"></div><div id="emList"></div></div>
+    <div id="roomMode" hidden></div>
     <div id="sendAs" hidden></div>
     <div id="mentionBar" hidden></div>
     <div id="replyBar" hidden><span></span><button type="button" class="iconBtn" id="replyCancel" aria-label="Cancelar respuesta">✕</button></div>
@@ -758,7 +761,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Toca ▶ en el vídeo para volver al directo':'Tap ▶ on the video to get back to live','Ya estás en directo · toca ▶ para continuar':'You’re live now · tap ▶ to continue','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Solo suscriptores':'Subscribers only','Solo seguidores':'Followers only','Solo emotes':'Emotes only','Modo lento':'Slow mode','Mensajes únicos':'Unique messages','Toca ▶ en el vídeo para volver al directo':'Tap ▶ on the video to get back to live','Ya estás en directo · toca ▶ para continuar':'You’re live now · tap ▶ to continue','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -1587,6 +1590,45 @@ function onClearMsg(m){
   const d=chatMsgs().find(x=>x.dataset.id===id); if(d) markDeleted(d);
 }
 
+// ---------- Modos del chat (solo seguidores, suscriptores, emotes, lento…) ----------
+let roomModes={};
+function onRoomState(t){
+  ['followers-only','subs-only','emote-only','slow','r9k'].forEach(k=>{ if(t[k]!==undefined) roomModes[k]=t[k]; });
+  const out=[], f=roomModes['followers-only'];
+  if(roomModes['subs-only']==='1') out.push(T('Solo suscriptores'));
+  if(f!==undefined && f!=='-1'){ const n=+f; out.push(T('Solo seguidores')+(n>0?' ('+(n>=1440?Math.round(n/1440)+' d':n>=60?Math.round(n/60)+' h':n+' min')+')':'')); }
+  if(roomModes['emote-only']==='1') out.push(T('Solo emotes'));
+  if(+roomModes['slow']>0) out.push(T('Modo lento')+': '+roomModes['slow']+' s');
+  if(roomModes['r9k']==='1') out.push(T('Mensajes únicos'));
+  const el=$('roomMode'); el.textContent=''; el.hidden=!out.length;
+  out.forEach(x=>{ const sp=document.createElement('span'); sp.textContent='🔒 '+x; el.appendChild(sp); });
+}
+// Avisos de Twitch al no poder escribir, en español
+function noticeText(m){
+  const id=(m.tags&&m.tags['msg-id'])||'', tr=m.trailing||'';
+  const es={
+    msg_followersonly:'Este chat es solo para seguidores: sigue el canal en Twitch para poder escribir.',
+    msg_followersonly_zero:'Este chat es solo para seguidores: sigue el canal en Twitch para poder escribir.',
+    msg_followersonly_followed:'Este chat es solo para quien sigue el canal desde hace un tiempo: todavía no puedes escribir.',
+    msg_subsonly:'Este chat es solo para suscriptores.',
+    msg_emoteonly:'Ahora mismo en este chat solo se pueden enviar emotes.',
+    msg_slowmode:'Modo lento: espera un poco antes de enviar otro mensaje.',
+    msg_r9k:'Modo de mensajes únicos: ese mensaje ya se ha enviado antes.',
+    msg_duplicate:'No puedes enviar el mismo mensaje dos veces seguidas.',
+    msg_banned:'Estás expulsado de este chat.',
+    msg_timedout:'Estás expulsado temporalmente de este chat.',
+    msg_verified_email:'Este chat pide verificar tu correo en Twitch para poder escribir.',
+    msg_requires_verified_phone_number:'Este chat pide verificar tu teléfono en Twitch para poder escribir.',
+    msg_rejected:'Tu mensaje está pendiente de revisión por los moderadores.',
+    msg_rejected_mandatory:'Tu mensaje ha sido bloqueado por las normas del canal.',
+    msg_channel_suspended:'Este canal está suspendido.'
+  }[id];
+  if(!es || LANG==='en') return tr; // (en inglés, el texto de Twitch ya vale)
+  // En los de tiempo, Twitch dice cuánto falta: lo añadimos entre paréntesis
+  const t=/(\d+)\s*(second|minute|hour|day)/i.exec(tr);
+  return es+(t && /slowmode|timedout|followersonly_followed/.test(id) ? ' ('+t[1]+' '+{second:'s',minute:'min',hour:'h',day:'d'}[t[2].toLowerCase()]+')' : '');
+}
+
 // ---------- IRC ----------
 function parse(line){
   const m = {tags:{}};
@@ -1625,14 +1667,14 @@ function connect(){
     const m = parse(l);
     switch(m.cmd){
       case 'PING': ws.send('PONG :'+m.trailing); break;
-      case 'ROOMSTATE': if(m.tags['room-id'] && !ws.loaded7){ ws.loaded7=true; roomId=m.tags['room-id']; loadChannel7tv(roomId); loadChannelBttvFfz(roomId); loadTwitchEmotes(); loadBadges(); loadCheermotes(); } break;
+      case 'ROOMSTATE': onRoomState(m.tags); if(m.tags['room-id'] && !ws.loaded7){ ws.loaded7=true; roomId=m.tags['room-id']; loadChannel7tv(roomId); loadChannelBttvFfz(roomId); loadTwitchEmotes(); loadBadges(); loadCheermotes(); } break;
       case 'PRIVMSG': showMsg(m.tags['display-name']||m.prefix.split('!')[0], m.tags.color, m.trailing||'', parseEmotes(m.tags.emotes).concat(parseGifs(m.tags.gifs)),
         {id:m.tags.id, login:m.prefix.split('!')[0], parentName:m.tags['reply-parent-display-name'], parentBody:m.tags['reply-parent-msg-body'], parentId:m.tags['reply-parent-msg-id'], rootId:m.tags['reply-thread-parent-msg-id'], t:+m.tags['tmi-sent-ts']||Date.now(), badges:m.tags.badges, badgeInfo:m.tags['badge-info'], bits:+m.tags.bits||0, msgId:m.tags['msg-id'], reward:m.tags['custom-reward-id']}); break;
       case 'USERNOTICE': showNotice(m); break;
       case 'USERSTATE': me.badges = m.tags.badges; me.badgeInfo = m.tags['badge-info']; me.color = m.tags.color || me.color; me.name = m.tags['display-name'] || me.name; break;
       case 'CLEARCHAT': onClearChat(m); break;
       case 'CLEARMSG': onClearMsg(m); break;
-      case 'NOTICE': sys(m.trailing); break;
+      case 'NOTICE': sys(noticeText(m)); break;
     }
   });
   const thisWs=ws;
@@ -1651,7 +1693,7 @@ function start(push=true, fromPop=false){
   document.body.classList.add('watching'); document.title = c + ' · Kekii'; $('shareBtn').hidden = false;
   document.body.classList.add('headerHidden'); $('channel').blur();
   createPlayer(c);
-  hideJumpHint(); jumpWait=null; pushQ=[]; chatEmUse=[]; stick=true; $('paused').style.display='none'; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
+  hideJumpHint(); jumpWait=null; roomModes={}; $('roomMode').hidden=true; pushQ=[]; chatEmUse=[]; stick=true; $('paused').style.display='none'; chatEl.textContent=''; userHist.clear(); seenMsg.clear(); msgIndex.clear(); threads.clear(); recentFor=''; try{ chatters.clear(); }catch(e){} sys('Entrando en #'+c+'…'); if(!autoStart()) sys('Toca ▶ abajo a la izquierda del reproductor para empezar el directo.'); connect(); loadChannelInfo(c);
 }
 $('go').onclick = ()=>{ hideSugg(); start(); };
 // Mostrar/ocultar la barra de búsqueda
