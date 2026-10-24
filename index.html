@@ -3343,7 +3343,8 @@ function openPipGuide(){
   const t=document.createElement('div'); const h=document.createElement('div'); h.className='pn'; h.style.font='700 19px var(--display)'; h.textContent=T('Sigue viendo el directo fuera de la app');
   const sub=document.createElement('div'); sub.className='pd'; sub.textContent=T('El directo sigue sonando en una ventanita flotante mientras usas otras apps.');
   t.append(h,sub); head.append(ic,t); sh.appendChild(head);
-  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // (los iPad modernos se presentan como Mac: los reconocemos por la pantalla táctil)
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints>1);
   const ol=document.createElement('ol'); ol.className='instSteps';
   const step=html=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.innerHTML=T(html); li.appendChild(sp); ol.appendChild(li); };
   if(ios){
