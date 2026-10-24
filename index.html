@@ -524,8 +524,9 @@ body.homeView.mini main{display:flex;flex:0 0 0;min-height:0;overflow:visible}
 body.mini #chatCol{display:none}
 body.mini{--miniW:min(56vw,330px)}
 body.mini #playerWrap{position:fixed;z-index:50;right:max(6px, env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));
-  width:var(--miniW);height:calc(var(--miniW) * 9 / 16 + 36px);aspect-ratio:auto;flex:none;border-radius:12px;overflow:hidden;
+  width:var(--miniW);height:calc(var(--miniW) * 9 / 16 + 36px);aspect-ratio:auto;flex:none;border-radius:0 0 12px 12px;overflow:hidden;
   box-shadow:0 0 0 1px var(--line),0 10px 30px rgba(0,0,0,.65);border:0;touch-action:none;cursor:pointer;display:block;background:#000}
+/* Esquinas de arriba rectas: si el redondeo recorta el vídeo, tras saltar al directo Twitch lo da por tapado y lo pausa */
 body.mini #playerSlot iframe{pointer-events:none}
 body.mini #playerSlot{position:absolute;left:0;top:0;width:100%;height:calc(var(--miniW) * 9 / 16);flex:none}
 body.mini #chatToggle{display:none!important}
