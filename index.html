@@ -2560,13 +2560,13 @@ function createPlayer(c){
         if(c!==channel || !document.body.classList.contains('mini') || Date.now()-pauseIntentAt<3000) return;
         diag('ventanita pausada por Twitch → reintento');
         [300,1000,2000,3500,5500,8000,11000].forEach(ms=>setTimeout(()=>{ try{
-          if(tPlayer && c===channel && document.body.classList.contains('mini') && tPlayer.isPaused()){ tPlayer.play(); diag('ventanita: play ('+ms+' ms)'); } }catch(e){} }, ms));
+          if(tPlayer && c===channel && document.body.classList.contains('mini') && tPlayer.isPaused()){ autoPlay(); diag('ventanita: play ('+ms+' ms)'); } }catch(e){} }, ms));
       });
       // Tras un salto, si al volver a poner la capa Twitch pausa el vídeo, la quitamos en este canal y seguimos
       if(Twitch.Player.PAUSE) tPlayer.addEventListener(Twitch.Player.PAUSE, ()=>{
         if(c!==channel || jumpWait || Date.now()-shieldBackAt>8000) return;
         shieldBackAt=0; document.body.classList.add('noShield'); diag('Twitch pausó al volver la capa → la quito y reanudo');
-        [100, 700, 1500, 2500].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms));
+        [100, 700, 1500, 2500].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused()) autoPlay(); }catch(e){} }, ms));
       });
     }catch(e){ tPlayer=null; fallback(); }
   };
@@ -2601,6 +2601,8 @@ function jumpLive(silent){
 // Tras un salto en el móvil esperamos a que toques ▶. Si Twitch arranca solo al recargar (pasa si ya lo habías tocado
 // antes), lo pausamos una vez: si siguiera «arrancado por la web», pausaría luego en la ventanita, pantalla completa…
 let jumpWait=null, iframeTapped=false;
+// Todas las reanudaciones automáticas pasan por aquí: si estás en la pausa de ⏭ (esperando tu ▶), no se toca
+function autoPlay(){ if(jumpWait) return; try{ if(tPlayer) tPlayer.play(); }catch(e){} }
 addEventListener('blur', ()=>setTimeout(()=>{ if(document.activeElement && document.activeElement.tagName==='IFRAME') iframeTapped=true; }, 0));
 function showJumpHint(){ hideJumpHint(); const d=document.createElement('div'); d.id='jumpHint'; d.setAttribute('role','status');
   d.textContent=T('Toca ▶ en el vídeo para volver al directo'); document.body.appendChild(d); jumpLive._h=setTimeout(hideJumpHint, 20000); }
@@ -2613,7 +2615,7 @@ function keepPlaying(){
   let was=false; try{ was=!tPlayer.isPaused(); }catch(e){ return; }
   wasPausedBefore=!was;
   if(!was) return;
-  [250, 800, 1600, 3000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused() && channel) tPlayer.play(); }catch(e){} }, ms));
+  [250, 800, 1600, 3000].forEach(ms=>setTimeout(()=>{ try{ if(tPlayer && tPlayer.isPaused() && channel) autoPlay(); }catch(e){} }, ms));
 }
 // ---------- Ancho del chat ajustable (PC y horizontal); el vídeo nunca baja de ~400 px (mínimo de Twitch) ----------
 // Menú «⋯» con los botones que no caben en la barra del canal
@@ -2690,7 +2692,7 @@ let miniWatch=null, miniUserPaused=false;
 addEventListener('resize', ()=>{ if(document.body.classList.contains('mini')) setMiniScale(); });
 function expandMini(push=true){
   clearInterval(miniWatch);
-  try{ if(tPlayer && tPlayer.isPaused() && !wasPausedBefore && !miniUserPaused) tPlayer.play(); }catch(e){}
+  try{ if(tPlayer && tPlayer.isPaused() && !wasPausedBefore && !miniUserPaused) autoPlay(); }catch(e){}
   miniUserPaused=false;
   keepPlaying();
   document.body.classList.remove('mini','homeView'); document.body.classList.add('headerHidden','watching');
@@ -3428,7 +3430,7 @@ let pauseIntentAt=0;
   const mo=new MutationObserver(()=>{ const now=anyOpen();
     if(now && !open){ open=true; openedAt=Date.now(); measurePlayer(); try{ wasPlaying=!!(tPlayer && channel && !tPlayer.isPaused()); }catch(e){ wasPlaying=false; } }
     else if(!now && open){ open=false;
-      if(wasPlaying && pauseIntentAt<openedAt) [150,600,1300,2500].forEach(ms=>setTimeout(()=>{ try{ if(!anyOpen() && tPlayer && channel && tPlayer.isPaused()) tPlayer.play(); }catch(e){} }, ms)); } });
+      if(wasPlaying && pauseIntentAt<openedAt) [150,600,1300,2500].forEach(ms=>setTimeout(()=>{ try{ if(!anyOpen() && tPlayer && channel && tPlayer.isPaused()) autoPlay(); }catch(e){} }, ms)); } });
   ids.forEach(id=>{ const e=$(id); if(e) mo.observe(e,{attributes:true,attributeFilter:['hidden']}); }); })();
 
 // ---------- Temporizador de apagado ----------
