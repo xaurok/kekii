@@ -2504,7 +2504,7 @@ const diagT0=Date.now();
 function diag(msg){ if(!DIAG) return; const t=((Date.now()-diagT0)/1000).toFixed(1); const d=document.createElement('div'); d.className='msg sys'; d.style.cssText='font-family:monospace;font-size:11px;font-style:normal;color:#9fe';
   d.textContent='['+t+'] '+msg; push(d); }
 function diagCover(){ // qué hay encima del vídeo (fuera del propio iframe)
-  const v=$('playerWrap').getBoundingClientRect(); const out=new Set();
+  const v=$('playerSlot').getBoundingClientRect(); const out=new Set();
   [[.1,.1],[.5,.1],[.9,.1],[.5,.5],[.1,.9],[.9,.9]].forEach(([fx,fy])=>{ const x=v.left+v.width*fx, y=v.top+v.height*fy;
     const e=document.elementFromPoint(x,y); if(e && e.tagName!=='IFRAME') out.add((e.id?'#'+e.id:e.tagName.toLowerCase()+(e.className&&typeof e.className==='string'?'.'+e.className.split(' ')[0]:''))); });
   return out.size ? [...out].join(' ') : 'nada'; }
@@ -2650,6 +2650,7 @@ function enterMini(){
   const n=$('miniName'); n.textContent=''; if(chan.stream){ const d=document.createElement('span'); d.className='dot'; n.appendChild(d); }
   n.append((chan.user && chan.user.display_name) || channel);
   document.body.classList.add('mini'); setMiniScale();
+  if(DIAG){ const r=$('playerSlot').getBoundingClientRect(); diag('ventanita '+Math.round(r.width)+'×'+Math.round(r.height)+' · encima: '+diagCover()); setTimeout(()=>{ try{ diag('ventanita 1,5 s · pausado='+tPlayer.isPaused()+' · encima: '+diagCover()); }catch(e){} }, 1500); }
 }
 let miniWatch=null, miniUserPaused=false;
 addEventListener('resize', ()=>{ if(document.body.classList.contains('mini')) setMiniScale(); });
