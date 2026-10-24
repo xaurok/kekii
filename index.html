@@ -1730,7 +1730,6 @@ chIn.addEventListener('keydown', e=>{
 
 function sendChat(){
   const t=$('text').value.trim();
-  { const m=/^\/prueba\s+([a-z])\s*$/i.exec(t); if(m){ $('text').value=''; location.href='/prueba/'+m[1].toLowerCase()+'/?c='+encodeURIComponent(channel||'ibai'); return; } }
   if(t==='/diag'){ DIAG=!DIAG; try{ localStorage.setItem('tw_diag', DIAG?'1':''); }catch(e){} $('text').value='';
     sys(DIAG?'Modo diagnóstico activado: entra de nuevo en el canal y pulsa ⏭. Escribe /diag otra vez para quitarlo.':'Modo diagnóstico desactivado.'); return; }
   if(!t || !ws || ws.readyState!==1 || !token) return;
