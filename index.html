@@ -756,7 +756,7 @@ const EN = {
  'Buscar canal':'Search channel','Ver':'Watch','Iniciar sesión':'Log in','Tu cuenta':'Your account','Actividad':'Activity','Inicio':'Home',
  'Siguiendo':'Following','En directo':'Live','Clips':'Clips','Categorías':'Categories','Cargar más':'Load more','Recientes':'Recent','Canales':'Channels',
  'Español':'Spanish','Todos los idiomas':'All languages','Todo':'All','Populares':'Popular','De tus seguidos':'From who you follow',
- 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Ya estás en directo · toca ▶ en el vídeo':'You’re live now · tap ▶ on the video','Ya estás en directo · toca ▶ para continuar':'You’re live now · tap ▶ to continue','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
+ 'Escribe un canal y pulsa Ver':'Type a channel and press Watch','Conectado al chat':'Connected to chat','Desconectado':'Offline','Toca ▶ en el vídeo para volver al directo':'Tap ▶ on the video to get back to live','Ya estás en directo · toca ▶ para continuar':'You’re live now · tap ▶ to continue','Más opciones':'More options','Mostrar título y etiquetas':'Show title and tags','Ocultar título y etiquetas':'Hide title and tags','Cambiar el ancho del chat':'Resize chat','Arrastra para cambiar el ancho · doble clic para restablecer':'Drag to resize · double-click to reset','Con chat':'With chat','Salir de pantalla completa':'Exit full screen','Pantalla completa con chat':'Full screen with chat','añadido al mensaje':'added to message','‹mensaje eliminado›':'‹message deleted›','‹eliminado›':'‹deleted›','Toca para ver lo que decía':'Tap to see what it said','días':'days','{n} ha sido expulsado temporalmente ({d})':'{n} was timed out ({d})','{n} ha sido expulsado del canal':'{n} was banned from the channel','en directo':'live','Desconectado, reconectando…':'Disconnected, reconnecting…',
  'Chat pausado · toca para bajar':'Chat paused · tap to scroll down','Ocultar':'Hide','Ocultar chat':'Hide chat','Mostrar chat':'Show chat','Chat':'Chat',
  'Enviar':'Send','Enviar mensaje':'Send a message','Inicia sesión para escribir':'Log in to chat','Escribiendo como':'Chatting as','Cancelar respuesta':'Cancel reply',
  'Respondiendo a':'Replying to','Buscar emote':'Search emotes','Emotes 7TV':'7TV emotes','Puntos de canal y Bits':'Channel points & Bits',
@@ -2541,11 +2541,7 @@ function createPlayer(c){
       finally{ document.createElement=origCreate; }
       if(DIAG) ['READY','PLAY','PLAYING','PAUSE','ENDED','ONLINE','OFFLINE','PLAYBACK_BLOCKED','SEEK'].forEach(k=>{ if(Twitch.Player[k]) tPlayer.addEventListener(Twitch.Player[k], ()=>diag('evento '+k+' · encima: '+diagCover()+' · clases: '+['noShieldTmp','noShield','fsChat'].filter(c=>document.body.classList.contains(c)).join(',')+' · '+(matchMedia('(orientation:landscape)').matches?'horizontal':'vertical'))); });
       tPlayer.addEventListener(Twitch.Player.PLAYING, ()=>{
-        if(jumpWait){
-          const auto=!iframeTapped && jumpWait.forced<1 && Date.now()-jumpWait.at<8000;
-          if(auto){ jumpWait.forced++; diag('Twitch arrancó solo tras el salto → pausa para que lo toques tú'); try{ tPlayer.pause(); }catch(e){} return; }
-          jumpWait=null;
-        }
+        jumpWait=null; // (ya sin recarga, Twitch no arranca solo tras el salto: el siguiente «play» es tu toque)
         hideJumpHint();
         if(document.body.classList.contains('noShieldTmp')){ clearTimeout(jumpLive._t); jumpLive._t=setTimeout(shieldBack, 1500); }
         if(!firstPlay || c!==channel) return; firstPlay=false;
@@ -2583,14 +2579,14 @@ function shieldBack(){ if(!document.body.classList.contains('noShieldTmp')) retu
 function jumpLive(silent){
   if(!tPlayer){ if(channel) createPlayer(channel); return; }
   diag('⏭ salto '+(silent?'automático':'manual')+' · encima: '+diagCover());
-  // En el móvil: recargamos en el momento actual y esperamos tu toque en ▶. Si Kekii lo reanudara solo, Twitch lo
+  // En el móvil: pausamos y esperamos tu toque en ▶ (el reproductor de Twitch, al reanudar, vuelve solo al momento
+  // actual; no hace falta recargarlo, que además puede repetir un anuncio). Si Kekii lo reanudara solo, Twitch lo
   // trataría como «arrancado por la web» y pausaría con cualquier cosa (ventanita, pantalla completa, fichas…)
   if(!autoStart()){
     jumpWait={at:Date.now(), forced:0}; iframeTapped=false; shieldBackAt=0; // la pausa del salto es nuestra: que nadie la «arregle»
     try{ if(document.activeElement && document.activeElement.tagName==='IFRAME') document.activeElement.blur(); }catch(e){}
     document.body.classList.add('noShieldTmp'); clearTimeout(jumpLive._t); // sin capa, para poder tocar el ▶ grande
     try{ tPlayer.pause(); }catch(e){}
-    setTimeout(()=>{ try{ tPlayer.setChannel(channel); }catch(e){} }, 250);
     showJumpHint(); return;
   }
   if(!silent) toast('Saltando al directo…');
@@ -2607,7 +2603,7 @@ function jumpLive(silent){
 let jumpWait=null, iframeTapped=false;
 addEventListener('blur', ()=>setTimeout(()=>{ if(document.activeElement && document.activeElement.tagName==='IFRAME') iframeTapped=true; }, 0));
 function showJumpHint(){ hideJumpHint(); const d=document.createElement('div'); d.id='jumpHint'; d.setAttribute('role','status');
-  d.textContent=T('Ya estás en directo · toca ▶ en el vídeo'); document.body.appendChild(d); jumpLive._h=setTimeout(hideJumpHint, 20000); }
+  d.textContent=T('Toca ▶ en el vídeo para volver al directo'); document.body.appendChild(d); jumpLive._h=setTimeout(hideJumpHint, 20000); }
 function hideJumpHint(){ clearTimeout(jumpLive._h); const d=$('jumpHint'); if(d) d.remove(); }
 // Al encoger o ampliar la ventana, Chrome puede pausar un vídeo que arrancó solo: lo reanudamos
 let lastResize=0, wasPausedBefore=false;

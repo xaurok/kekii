@@ -13,7 +13,7 @@ Kekii es una app web (PWA) para ver directos de Twitch y chatear desde Android o
 
 - **Emotes de 7TV, BTTV y FFZ** en el chat y en el selector para escribir.
 - **Chat completo**: respuestas e hilos, menciones, susurros, insignias, GIFs e historial de cada usuario.
-- **Siempre en directo**: si te quedas atrás, un botón te pone al momento actual.
+- **Siempre en directo**: te avisa si vas con retraso y un botón te pone al momento actual.
 - **Ventana flotante** (Android) y **temporizador** para dormir.
 - **Clips** en vertical, al estilo TikTok.
 - **Español e inglés**.
